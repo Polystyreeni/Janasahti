@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "834780026878",
+    "project_id": "fir-test-c3f21",
+    "storage_bucket": "fir-test-c3f21.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:834780026878:android:db13c40d8f2c90a28752af",
+        "android_client_info": {
+          "package_name": "com.example.wordgame"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "834780026878-j8cjd8l7todjn62paf4q46vavb4u5hat.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBG8IxP2_qE3PVzuyM5tdM57eO2B9HOhe4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "834780026878-j8cjd8l7todjn62paf4q46vavb4u5hat.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:834780026878:android:465699f738f64f908752af",
+        "android_client_info": {
+          "package_name": "com.jt.firebasetest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "834780026878-j8cjd8l7todjn62paf4q46vavb4u5hat.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBG8IxP2_qE3PVzuyM5tdM57eO2B9HOhe4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "834780026878-j8cjd8l7todjn62paf4q46vavb4u5hat.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
