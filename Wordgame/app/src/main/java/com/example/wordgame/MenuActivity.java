@@ -116,19 +116,27 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d(TAG, "Main menu on stop");
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
 
+        Log.d(TAG, "Main menu on resume");
         startButton.setClickable(true);
 
         // Create a new board when entering main menu
-        if(boardThread == null) {
-            boardThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    BoardManager.generateBoard();
-                }
-            });
+        if(BoardManager.getShouldGenerateBoard()) {
+                boardThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        BoardManager.generateBoard();
+                    }
+                });
+                boardThread.start();
         }
     }
 
@@ -179,6 +187,7 @@ public class MenuActivity extends AppCompatActivity {
         // Start game activity
         Intent intent = new Intent(MenuActivity.this, MainActivity.class);
         intent.putExtra(MainActivity.EXTRA_MESSAGE, username);
+        BoardManager.setShouldGenerateBoard(false);
         startActivity(intent);
         boardThread = null;
     }

@@ -26,6 +26,7 @@ public class BoardManager {
     private static String latestError = "";
     private static Board nextBoard = null;
     private static Random randGen = new Random();
+    private static boolean shouldGenerateBoard = false;
 
     // Fetch a random game board from the provided XML file and set it as next board
     public static void generateBoard() {
@@ -123,4 +124,12 @@ public class BoardManager {
     }
 
     public static String getLatestError() {return latestError;}
+
+    public static void setShouldGenerateBoard(boolean value) {
+        shouldGenerateBoard = value;
+    }
+
+    public static boolean getShouldGenerateBoard() {
+        return shouldGenerateBoard;
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.wordgame;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 
@@ -26,8 +27,12 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
@@ -81,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth firebaseAuth;
     private String collectionPath;
     private String fireBaseUid;
+    private int previousHighScore = 0;
 
     Handler timerHandler = new Handler();
 
@@ -134,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
         username = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
 
         activeBoard = BoardManager.getNextBoard();
+        BoardManager.setShouldGenerateBoard(true);
 
         // Receiving board failed, go back to main menu
         if(activeBoard == null) {
@@ -187,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
                 for(Button btn : tiles) {
                     btn.setWidth(width / boardWidth);
                     btn.setHeight(height / boardHeight);
+                    btn.setTextSize(width / 30);
                 }
             }
         });
@@ -222,11 +230,14 @@ public class MainActivity extends AppCompatActivity {
         collectionPath = FIRESTORE_PREFIX + BoardManager.getNextBoard().getBoardString();
         firebaseAuth = FirebaseAuth.getInstance();
         fireBaseUid = firebaseAuth.getUid();
+        getPreviousHighScore();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        Log.d(TAG, "Main Board OnDestroy");
         timerHandler.removeCallbacks(timerRunnable);
     }
 
@@ -498,8 +509,6 @@ public class MainActivity extends AppCompatActivity {
     // Return to main menu
     private void returnToMain() {
         BoardManager.clearActiveBoard();
-        Intent intent = new Intent(MainActivity.this, MenuActivity.class);
-        startActivity(intent);
         finish();
     }
 
@@ -515,11 +524,31 @@ public class MainActivity extends AppCompatActivity {
         return bestWord;
     }
 
+    // Get the user's previous high score on this game board
+    private void getPreviousHighScore() {
+        sessionReference = mFireStore.collection(collectionPath);
+        sessionReference.document(fireBaseUid).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                HighscoreData previousData = documentSnapshot.toObject(HighscoreData.class);
+                if(previousData != null) {
+                    previousHighScore = previousData.getScore();
+                    Log.d(TAG, "Previous high score data found, score: " + previousHighScore);
+                }
+            }
+        });
+    }
+
     // Update user data after game has ended
     private void updateLeaderBoards() {
         sessionReference = mFireStore.collection(collectionPath);
         HighscoreData data = new HighscoreData(username, currentScore, findBestWord());
         data.setUserId(fireBaseUid);
+
+        // Don't update score, if previous score was better
+        if(previousHighScore > currentScore) {
+            data.setScore(previousHighScore);
+        }
         sessionReference.document(fireBaseUid).set(data);
     }
 }
