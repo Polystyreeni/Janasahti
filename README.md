@@ -17,7 +17,7 @@ My own version of the mobile game Wordz. The application is made as a part of Mo
 Application supported languages: Finnish
 
 Features:
-- Game board loaading from exterior source
+- Game board loading from exterior source
 - Highscores unique to each game board
 
 Requirements:
