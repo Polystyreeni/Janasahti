@@ -50,8 +50,8 @@ public class ScoreboardAdapter extends RecyclerView.Adapter<ScoreboardAdapter.Vi
         // contents of the view with that element
 
         HighscoreData data = localDataSet.get(position);
-        String text = String.format("%d:   %s  -  %d pistettä", position + 1,
-                data.getUserName(), data.getScore());
+        String text = String.format("%d:   %s  -  %d pistettä  '%s'", position + 1,
+                data.getUserName(), data.getScore(), data.getBestWord());
 
         viewHolder.getTextView().setText(text);
     }

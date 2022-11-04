@@ -3,6 +3,8 @@ package com.example.wordgame;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -14,15 +16,19 @@ import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,9 +42,11 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     private Board activeBoard;
@@ -60,6 +68,13 @@ public class MainActivity extends AppCompatActivity {
     private ScrollView foundWordsScrollView;
     private TextView scoreText;
     private LinearLayout wordsLayout;
+    private ConstraintLayout baseLayout;
+
+    // Visual attributes
+    private int foundWordColor = Color.DKGRAY;
+    private int defaultLetterColor = Color.BLACK;
+    private int highlightLetterColor = Color.BLACK;
+    private Drawable defaultTile = null;
 
     // Game state
     private String username;
@@ -68,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean gameActive = false;
     private boolean selectingActive = false;
     private final HashSet<String> wordsFound = new HashSet<>();
+    private Random random;
 
     // Sound
     private SoundPool soundPool;
@@ -134,6 +150,14 @@ public class MainActivity extends AppCompatActivity {
         timerTextView = findViewById(R.id.timerTextView);
         wordsLayout = findViewById(R.id.wordsLinearLayout);
         foundWordsScrollView = findViewById(R.id.wordsScrollView);
+        baseLayout = findViewById(R.id.gameBaseLayout);
+
+        defaultTile = AppCompatResources.getDrawable(this, R.drawable.wordgame_tile);
+
+        // Set UI component colors to match selected theme
+        if(GameSettings.getDarkModeEnabled() > 0) {
+            setDarkMode();
+        }
 
         // Get username from previous activity
         Intent intent = getIntent();
@@ -141,6 +165,9 @@ public class MainActivity extends AppCompatActivity {
 
         activeBoard = BoardManager.getNextBoard();
         BoardManager.setShouldGenerateBoard(true);
+
+        random = new Random();
+        random.setSeed(Calendar.getInstance().getTimeInMillis());
 
         // Receiving board failed, go back to main menu
         if(activeBoard == null) {
@@ -191,10 +218,16 @@ public class MainActivity extends AppCompatActivity {
                 linearLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                 int width = linearLayout.getWidth();
                 int height = linearLayout.getHeight();
+
+                if(GameSettings.getOledProtectionEnabled() > 0) {
+                    modifyLayoutParameters();
+                }
+
                 for(Button btn : tiles) {
                     btn.setWidth(width / boardWidth);
                     btn.setHeight(height / boardHeight);
-                    btn.setTextSize(width / 30);
+                    btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, width / (2 * boardWidth * boardWidth));
+                    //btn.setTextSize(btn.getMeasuredWidth() / 9);
                 }
             }
         });
@@ -241,9 +274,29 @@ public class MainActivity extends AppCompatActivity {
         timerHandler.removeCallbacks(timerRunnable);
     }
 
+    private void modifyLayoutParameters() {
+        int widthBias = random.nextInt(5);
+        int heightBias = random.nextInt(5);
+
+        ConstraintLayout.LayoutParams wordsLp = (ConstraintLayout.LayoutParams) foundWordsScrollView.getLayoutParams();
+        ConstraintLayout.LayoutParams scoreLp = (ConstraintLayout.LayoutParams) scoreText.getLayoutParams();
+
+        wordsLp.topMargin += heightBias * 5;
+        scoreLp.topMargin += heightBias * 5;
+        wordsLp.leftMargin += widthBias * 5;
+
+        ConstraintLayout.LayoutParams lp = (ConstraintLayout.LayoutParams) linearLayout.getLayoutParams();
+        lp.topMargin += widthBias * 10;
+        foundWordsScrollView.setLayoutParams(wordsLp);
+        scoreText.setLayoutParams(scoreLp);
+        linearLayout.setLayoutParams(lp);
+    }
+
     // Create layout for the tile grid
     private void initializeGameBoard(String boardString, int boardWidth, int boardHeight) {
         int strCounter = 0;
+
+        boardString = randomizeBoardString(boardString);
         linearLayout.setWeightSum(4);
         for(int col = 0; col < boardHeight; col++) {
             LinearLayout horzLayout = new LinearLayout(this);
@@ -261,9 +314,9 @@ public class MainActivity extends AppCompatActivity {
                 tile.setClickable(false);
                 tile.setMinimumWidth(0);
                 tile.setMinimumHeight(1);
-                tile.setTextColor(Color.BLACK);
+                tile.setTextColor(defaultLetterColor);
 
-                tile.setBackground(AppCompatResources.getDrawable(this, R.drawable.wordgame_tile));
+                tile.setBackground(defaultTile);
                 String buttonText = Character.toString(boardString.charAt(strCounter));
                 tile.setText(buttonText);
                 horzLayout.addView(tile);
@@ -274,11 +327,45 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private String randomizeBoardString(String boardString) {
+        int randInt = random.nextInt(100);
+        //Log.d(TAG, "Gameboard random value: " + randInt);
+        if(randInt < 25) {
+            return boardString;
+        }
+        else if(randInt > 25 && randInt < 50) {
+            //Log.d(TAG, "Game board reversed");
+            return new StringBuilder(boardString).reverse().toString();
+        }
+
+        else if(randInt > 50 && randInt < 75) {
+            //Log.d(TAG, "Game board complement");
+            return getComplementBoard(boardString).toString();
+        }
+
+        else {
+            //Log.d(TAG, "Game board complement reverse");
+            return getComplementBoard(boardString).reverse().toString();
+        }
+    }
+
+    private StringBuilder getComplementBoard(String boardString) {
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < 4; i++) {
+            for(int j = 0; j < 4; j++) {
+                sb.append(boardString.charAt(i + j * 4));
+            }
+        }
+
+        return sb;
+    }
+
     // Logic to use, when user taps on the screen for the first time
     private void enterSelection(MotionEvent motionEvent) {
         selectingActive = true;
         for(Button btn : selectedButtons) {
-            btn.setBackground(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.wordgame_tile));
+            btn.setBackground(defaultTile);
+            btn.setTextColor(defaultLetterColor);
         }
         selectedButtons.clear();
         Log.d(TAG, "MotionEventPos: " + motionEvent.getRawX() + " " + motionEvent.getRawY());
@@ -293,6 +380,7 @@ public class MainActivity extends AppCompatActivity {
                     Math.abs(location[1] - Math.round(motionEvent.getRawY())) < heightError) {
                 selectedButtons.add(tile);
                 tile.setBackground(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.wordgame_tile_blue));
+                tile.setTextColor(highlightLetterColor);
                 break;
             }
         }
@@ -339,7 +427,8 @@ public class MainActivity extends AppCompatActivity {
                     if(tileIndex < selectedButtons.size() - 1) {
                         while(tileIndex <= selectedButtons.size() - 1) {
                             Log.d(TAG, "Removing tile, list size: " + selectedButtons.size());
-                            selectedButtons.get(tileIndex).setBackground(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.wordgame_tile));
+                            selectedButtons.get(tileIndex).setBackground(defaultTile);
+                            selectedButtons.get(tileIndex).setTextColor(defaultLetterColor);
                             selectedButtons.remove(tileIndex);
                         }
                     }
@@ -350,6 +439,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 tile.setBackground(AppCompatResources.getDrawable(getApplicationContext(), R.drawable.wordgame_tile_blue));
+                tile.setTextColor(highlightLetterColor);
                 break;
             }
         }
@@ -370,7 +460,7 @@ public class MainActivity extends AppCompatActivity {
         for(String word : words) {
             if(word.equals(formedWord) && !wordsFound.contains(formedWord)) {
                 TextView wordView = new TextView(getApplicationContext());
-                wordView.setTextColor(Color.DKGRAY);
+                wordView.setTextColor(foundWordColor);
                 String wordText = String.format("%d %s", GameSettings.getScoreForLength(formedWord.length()),
                         formedWord);
                 wordView.setText(wordText);
@@ -418,7 +508,8 @@ public class MainActivity extends AppCompatActivity {
             return;
 
         for(Button btn : selectedButtons) {
-            btn.setBackground(AppCompatResources.getDrawable(this, R.drawable.wordgame_tile));
+            btn.setBackground(defaultTile);
+            btn.setTextColor(defaultLetterColor);
         }
     }
 
@@ -465,7 +556,7 @@ public class MainActivity extends AppCompatActivity {
             TextView view = new TextView(this);
             view.setAllCaps(true);
             view.setText(word);
-            int textColor = wordsFound.contains(word) ? Color.GREEN : Color.BLACK;
+            int textColor = wordsFound.contains(word) ? getColor(R.color.dark_green) : Color.BLACK;
             view.setTextColor(textColor);
             layout.addView(view);
         }
@@ -550,5 +641,27 @@ public class MainActivity extends AppCompatActivity {
             data.setScore(previousHighScore);
         }
         sessionReference.document(fireBaseUid).set(data);
+    }
+
+    private void setDarkMode() {
+        foundWordColor = Color.WHITE;
+        defaultLetterColor = Color.WHITE;
+        highlightLetterColor = Color.BLACK;
+        defaultTile = AppCompatResources.getDrawable(this, R.drawable.wordgame_tile_black);
+
+        baseLayout.setBackground(ContextCompat.getDrawable(getApplicationContext(),
+                R.drawable.background_gradient_dark));
+
+        foundWordsScrollView.setBackground(ContextCompat.getDrawable(getApplicationContext(),
+                R.drawable.rounded_corner_black));
+        linearLayout.setBackground(ContextCompat.getDrawable(getApplicationContext(),
+                R.drawable.rounded_corner_black));
+
+        scoreText.setBackground(ContextCompat.getDrawable(getApplicationContext(),
+                R.drawable.rounded_corner_black));
+        scoreText.setTextColor(Color.WHITE);
+        timerTextView.setBackground(ContextCompat.getDrawable(getApplicationContext(),
+                R.drawable.rounded_corner_black));
+        timerTextView.setTextColor(Color.WHITE);
     }
 }

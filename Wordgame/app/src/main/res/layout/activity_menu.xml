@@ -5,10 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/background_gradient"
+    android:id="@+id/menuLayout"
     tools:context=".MenuActivity">
 
     <View
-        android:id="@+id/view"
+        android:id="@+id/mainMenuBackView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="30dp"
@@ -77,5 +78,26 @@
         app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/startGameButton" />
+
+    <Button
+        android:id="@+id/settingsButton"
+        android:background="@drawable/wordgame_settings"
+        android:tint="@color/white"
+        android:layout_width="50dp"
+        android:layout_height="0dp"
+        android:layout_marginEnd="34dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mainMenuBackView" />
+
+    <TextView
+        android:id="@+id/versionText"
+        android:layout_width="57dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="34dp"
+        android:text="X.X.X"
+        android:textColor="@color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mainMenuBackView" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

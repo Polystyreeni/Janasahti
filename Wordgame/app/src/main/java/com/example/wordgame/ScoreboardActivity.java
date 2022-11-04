@@ -2,6 +2,8 @@ package com.example.wordgame;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -36,6 +38,8 @@ public class ScoreboardActivity extends AppCompatActivity {
 
     // Ui components
     private TextView scoreTextView;
+    private TextView bestPlayersTextView;
+    private ConstraintLayout scoreBoardLayout;
 
     // Firebase
     private FirebaseFirestore mFireStore;
@@ -62,7 +66,10 @@ public class ScoreboardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scoreboard);
 
+        // UI Components
         scoreTextView = findViewById(R.id.personalStatTextView);
+        scoreBoardLayout = findViewById(R.id.scoreboardLayout);
+        bestPlayersTextView = findViewById(R.id.scoreboardTitleTextView);
 
         // Get data from previous game
         Intent intent = getIntent();
@@ -99,6 +106,10 @@ public class ScoreboardActivity extends AppCompatActivity {
 
         boardThread.start();
         scoreBoardHandler.postDelayed(this::startGame, GameSettings.getScoreBoardDuration());
+
+        if(GameSettings.getDarkModeEnabled() > 0) {
+            setDarkMode();
+        }
     }
 
     @Override
@@ -156,6 +167,18 @@ public class ScoreboardActivity extends AppCompatActivity {
         String bestWord = dataArr[2];
 
         return new HighscoreData(username, score, bestWord);
+    }
+
+    private void setDarkMode() {
+        scoreBoardLayout.setBackground(ContextCompat.getDrawable(getApplicationContext(),
+                R.drawable.background_gradient_dark));
+        bestPlayersTextView.setBackground(ContextCompat.getDrawable(getApplicationContext(),
+                R.drawable.rounded_corner_black));
+        bestPlayersTextView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.white));
+        scoreTextView.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.white));
+        RecyclerView scoreRecyclerView = findViewById(R.id.scoreRecyclerView);
+        scoreRecyclerView.setBackground(ContextCompat.getDrawable(getApplicationContext(),
+                R.drawable.background_gradient_dark));
     }
 
     // Sort and get highscore data from Firebase

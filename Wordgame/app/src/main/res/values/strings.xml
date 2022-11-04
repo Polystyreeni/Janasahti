@@ -4,4 +4,15 @@
     <string name="username_hint">Käyttäjänimi…</string>
     <string name="start_game">Aloita</string>
     <string name="best_players">Parhaat pelaajat</string>
+    <string name="settings_menu">Asetukset</string>
+    <string name="settings_amoled">OLED-suoja</string>
+    <string name="settings_colormode">Tumma Teema</string>
+    <string name="settings_return">Palaa</string>
+    <string name="error_version">Versiotiedon haku epäonnistui</string>
+    <string name="new_version_header">Päivitys saatavilla</string>
+    <string name="new_version_info">Sovelluksen käytettävyys on läpikäynyt kehitystä.
+    Uuden version voi ladata alla olevasta linkistä:</string>
+    <string name="new_version_number">Asennettu versio: %1$s | Uusin versio: %2$s</string>
+    <string name="new_version_link">https://github.com/Polystyreeni/Janasahti/releases</string>
+
 </resources>
