@@ -632,14 +632,13 @@ public class MainActivity extends AppCompatActivity {
 
     // Update user data after game has ended
     private void updateLeaderBoards() {
+        // Don't update score table, if previous score is greater
+        if(previousHighScore > currentScore) {
+            return;
+        }
         sessionReference = mFireStore.collection(collectionPath);
         HighscoreData data = new HighscoreData(username, currentScore, findBestWord());
         data.setUserId(fireBaseUid);
-
-        // Don't update score, if previous score was better
-        if(previousHighScore > currentScore) {
-            data.setScore(previousHighScore);
-        }
         sessionReference.document(fireBaseUid).set(data);
     }
 
