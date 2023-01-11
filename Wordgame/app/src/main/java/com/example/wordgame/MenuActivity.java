@@ -61,9 +61,10 @@ public class MenuActivity extends AppCompatActivity {
     private Button settingsButton;
     private ConstraintLayout layout;
     private View mainMenuBackground;
-    private TextView versionTextView;
 
+    // Menu state
     private Thread boardThread = null;
+    private boolean versionChecked = false;
 
     // Firebase
     private FirebaseFirestore mFireStore;
@@ -75,12 +76,13 @@ public class MenuActivity extends AppCompatActivity {
     Runnable boardLoadRunnable = new Runnable() {
         @Override
         public void run() {
-            if(boardThread.isAlive()) {
+            if(boardThread.isAlive() || !versionChecked) {
                 boardLoadHandler.postDelayed(this, 500);
             }
 
             else {
                 boardLoadProgressBar.setVisibility(View.GONE);
+
                 startGame();
                 boardLoadHandler.removeCallbacks(boardLoadRunnable);
             }
@@ -99,7 +101,7 @@ public class MenuActivity extends AppCompatActivity {
         settingsButton = findViewById(R.id.settingsButton);
         layout = findViewById(R.id.menuLayout);
         mainMenuBackground = findViewById(R.id.mainMenuBackView);
-        versionTextView = findViewById(R.id.versionText);
+        final TextView versionTextView = findViewById(R.id.versionText);
 
         mFireStore = FirebaseFirestore.getInstance();
         sessionReference = mFireStore.collection(userCollectionName);
@@ -221,7 +223,9 @@ public class MenuActivity extends AppCompatActivity {
     public void onStart() {
         super.onStart();
         // Check if user is signed in (non-null) and update UI accordingly.
-        firebaseUser = firebaseAuth.getCurrentUser();
+        if(GameSettings.UseFirebase()) {
+            firebaseUser = firebaseAuth.getCurrentUser();
+        }
     }
 
     private void updateBackground() {
@@ -252,9 +256,7 @@ public class MenuActivity extends AppCompatActivity {
             username = username.substring(0, GameSettings.getUsernameMaxLength());
         }
 
-        if(firebaseUser != null) {
-            createUserProfile(username);
-            writeSettingsFile();
+        if(firebaseUser != null && GameSettings.UseFirebase()) {
             sessionReference = mFireStore.collection(userCollectionName);
             String document = firebaseUser.getUid();
 
@@ -274,6 +276,9 @@ public class MenuActivity extends AppCompatActivity {
                         }
                     });
         }
+
+        createUserProfile(username);
+        writeSettingsFile();
 
         // Start game activity
         Intent intent = new Intent(MenuActivity.this, MainActivity.class);
@@ -357,6 +362,8 @@ public class MenuActivity extends AppCompatActivity {
 
     // Sign in anonymously to Firebase
     private void signInAnonymously() {
+        if(!GameSettings.UseFirebase())
+            return;
         firebaseAuth.signInAnonymously()
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -376,6 +383,7 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     public void onVersionRetrieved(String latestVersion) {
+
         if(latestVersion.isEmpty()) {
             Toast.makeText(MenuActivity.this, R.string.error_version, Toast.LENGTH_SHORT).show();
             return;
@@ -385,7 +393,10 @@ public class MenuActivity extends AppCompatActivity {
         if(!currentVersion.equals(latestVersion)) {
             // Create popup with update prompt
             showUpdatePopup(latestVersion);
+            return;
         }
+
+        versionChecked = true;
     }
 
     private void showUpdatePopup(String latestVersion) {
@@ -409,6 +420,7 @@ public class MenuActivity extends AppCompatActivity {
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                versionChecked = true;
                 popupWindow.dismiss();
             }
         });

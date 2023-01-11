@@ -78,9 +78,11 @@ public class ScoreboardActivity extends AppCompatActivity {
 
         showPersonalScore(highscoreData);
 
-        mFireStore = FirebaseFirestore.getInstance();
-        collectionPath = FIRESTORE_PREFIX + BoardManager.getNextBoard().getBoardString();
-        sessionReference = mFireStore.collection(collectionPath);
+        if(GameSettings.UseFirebase()) {
+            mFireStore = FirebaseFirestore.getInstance();
+            collectionPath = FIRESTORE_PREFIX + BoardManager.getNextBoard().getBoardString();
+            sessionReference = mFireStore.collection(collectionPath);
+        }
 
         // Initialize recyclerView
         RecyclerView scoreBoard = (RecyclerView) findViewById(R.id.scoreRecyclerView);
@@ -152,6 +154,8 @@ public class ScoreboardActivity extends AppCompatActivity {
 
     // This may have to be removed for safety reasons (no valuable data is at danger here though)
     private void limitScores() {
+        if(!GameSettings.UseFirebase())
+            return;
         while(highScores.size() > GameSettings.getScoreBoardMaxCount()) {
             Log.d(TAG, "Removing lowest score from scoreboard");
             String uid = highScores.get(highScores.size() - 1).getUserId();
@@ -183,6 +187,8 @@ public class ScoreboardActivity extends AppCompatActivity {
 
     // Sort and get highscore data from Firebase
     public void updateHighScores() {
+        if(!GameSettings.UseFirebase())
+            return;
         mFireStore.collection(collectionPath).orderBy("score", Query.Direction.DESCENDING)
                 .limit(GameSettings.getScoreBoardMaxCount())
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {

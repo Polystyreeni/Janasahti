@@ -261,11 +261,13 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Initialize firebase
-        mFireStore = FirebaseFirestore.getInstance();
-        collectionPath = FIRESTORE_PREFIX + BoardManager.getNextBoard().getBoardString();
-        firebaseAuth = FirebaseAuth.getInstance();
-        fireBaseUid = firebaseAuth.getUid();
-        getPreviousHighScore();
+        if(GameSettings.UseFirebase()) {
+            mFireStore = FirebaseFirestore.getInstance();
+            collectionPath = FIRESTORE_PREFIX + BoardManager.getNextBoard().getBoardString();
+            firebaseAuth = FirebaseAuth.getInstance();
+            fireBaseUid = firebaseAuth.getUid();
+            getPreviousHighScore();
+        }
     }
 
     @Override
@@ -588,19 +590,10 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "Show word: " + word);
                     int[] colorTiles = WordSolver.getTiles(word, boardString);
                     highLightButtons(colorTiles);
-                    wordPopupWindow.getContentView().setAlpha(0);
+                    TextView textView = (TextView)view;
+                    textView.setTextColor(Color.BLUE);
+                    wordPopupWindow.getContentView().setAlpha(0.1f);
                     return true;
-                }
-            });
-            view.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View view, MotionEvent motionEvent) {
-                    if(motionEvent.getAction() == MotionEvent.ACTION_UP) {
-                        Log.d(TAG, "Reshow all words");
-                        wordPopupWindow.getContentView().setAlpha(1);
-                        resetAllButtons();
-                    }
-                    return false;
                 }
             });
             layout.addView(view);
@@ -612,6 +605,23 @@ public class MainActivity extends AppCompatActivity {
         wordPopupWindow = new PopupWindow(popupView, width, height, false);
         wordPopupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
         wordPopupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+        wordPopupWindow.setOutsideTouchable(true);
+
+        wordPopupWindow.setTouchInterceptor(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+
+                if(motionEvent.getAction() == MotionEvent.ACTION_OUTSIDE) {
+                    if(wordPopupWindow.getContentView().getAlpha() > 0.9)
+                        return false;
+                    Log.d(TAG, "Reshow all words");
+                    wordPopupWindow.getContentView().setAlpha(1);
+                    resetAllButtons();
+                    return true;
+                }
+                return false;
+            }
+        });
 
         // Update leaderboards
         updateLeaderBoards();
@@ -662,6 +672,8 @@ public class MainActivity extends AppCompatActivity {
 
     // Get the user's previous high score on this game board
     private void getPreviousHighScore() {
+        if(!GameSettings.UseFirebase())
+            return;
         sessionReference = mFireStore.collection(collectionPath);
         sessionReference.document(fireBaseUid).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
@@ -677,6 +689,9 @@ public class MainActivity extends AppCompatActivity {
 
     // Update user data after game has ended
     private void updateLeaderBoards() {
+        if(!GameSettings.UseFirebase())
+            return;
+
         // Don't update score table, if previous score is greater
         if(previousHighScore > currentScore) {
             return;
