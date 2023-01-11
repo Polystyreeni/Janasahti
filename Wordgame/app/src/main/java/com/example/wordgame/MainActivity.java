@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView scoreText;
     private LinearLayout wordsLayout;
     private ConstraintLayout baseLayout;
+    private PopupWindow wordPopupWindow;
 
     // Visual attributes
     private int foundWordColor = Color.DKGRAY;
@@ -83,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean gameActive = false;
     private boolean selectingActive = false;
     private final HashSet<String> wordsFound = new HashSet<>();
+    private String boardString;
     private Random random;
 
     // Sound
@@ -293,10 +295,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Create layout for the tile grid
-    private void initializeGameBoard(String boardString, int boardWidth, int boardHeight) {
+    private void initializeGameBoard(String boardStr, int boardWidth, int boardHeight) {
         int strCounter = 0;
 
-        boardString = randomizeBoardString(boardString);
+        boardString = randomizeBoardString(boardStr);
         linearLayout.setWeightSum(4);
         for(int col = 0; col < boardHeight; col++) {
             LinearLayout horzLayout = new LinearLayout(this);
@@ -308,7 +310,8 @@ public class MainActivity extends AppCompatActivity {
             horzLayout.setWeightSum(4);
 
             linearLayout.addView(horzLayout);
-            for(int row = 0; row < 4; row++) {
+
+            for(int row = 0; row < boardWidth; row++) {
                 Button tile = new Button(this);
                 tile.setTextSize(20);
                 tile.setClickable(false);
@@ -513,6 +516,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void resetAllButtons() {
+        for(Button btn : tiles) {
+            btn.setBackground(defaultTile);
+            btn.setTextColor(defaultLetterColor);
+        }
+    }
+
+
     // Scroll to the bottom of found words view to always show latest found word
     private void updateFoundWordsPosition() {
         View lastChild = foundWordsScrollView.getChildAt(foundWordsScrollView.getChildCount() - 1);
@@ -524,7 +535,20 @@ public class MainActivity extends AppCompatActivity {
         foundWordsScrollView.smoothScrollBy(0, delta);
     }
 
+    private void highLightButtons(int[] buttons) {
+        resetAllButtons();
+        StringBuilder sb = new StringBuilder();
+        for (int button : buttons) {
+            sb.append(tiles.get(button).getText());
+            tiles.get(button).setBackground(
+                    AppCompatResources.getDrawable(getApplicationContext(), R.drawable.wordgame_tile_blue));
+        }
+
+        Log.d(TAG, "Highlighted word: " + sb.toString());
+    }
+
     // Game end functionality
+    @SuppressLint("ClickableViewAccessibility")
     private void gameEnd() {
         gameActive = false;
 
@@ -558,20 +582,41 @@ public class MainActivity extends AppCompatActivity {
             view.setText(word);
             int textColor = wordsFound.contains(word) ? getColor(R.color.dark_green) : Color.BLACK;
             view.setTextColor(textColor);
+            view.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+                    Log.d(TAG, "Show word: " + word);
+                    int[] colorTiles = WordSolver.getTiles(word, boardString);
+                    highLightButtons(colorTiles);
+                    wordPopupWindow.getContentView().setAlpha(0);
+                    return true;
+                }
+            });
+            view.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+                    if(motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                        Log.d(TAG, "Reshow all words");
+                        wordPopupWindow.getContentView().setAlpha(1);
+                        resetAllButtons();
+                    }
+                    return false;
+                }
+            });
             layout.addView(view);
         }
 
         // Show popup window
         int width = LinearLayout.LayoutParams.WRAP_CONTENT;
         int height = LinearLayout.LayoutParams.WRAP_CONTENT;
-        final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
-        popupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
-        popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+        wordPopupWindow = new PopupWindow(popupView, width, height, false);
+        wordPopupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
+        wordPopupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
 
         // Update leaderboards
         updateLeaderBoards();
 
-        new Handler().postDelayed(() -> enterScoreboard(popupWindow), 10000);
+        new Handler().postDelayed(() -> enterScoreboard(wordPopupWindow), 10000);
     }
 
     // Sort words according to length
