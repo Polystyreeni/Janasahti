@@ -604,16 +604,15 @@ public class MainActivity extends AppCompatActivity {
         int height = LinearLayout.LayoutParams.WRAP_CONTENT;
         wordPopupWindow = new PopupWindow(popupView, width, height, false);
         wordPopupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
-        wordPopupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
         wordPopupWindow.setOutsideTouchable(true);
 
         wordPopupWindow.setTouchInterceptor(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
-
+                Log.d(TAG, "On touch popup with action: " + MotionEvent.actionToString(motionEvent.getAction()));
                 if(motionEvent.getAction() == MotionEvent.ACTION_OUTSIDE) {
                     if(wordPopupWindow.getContentView().getAlpha() > 0.9)
-                        return false;
+                        return true;
                     Log.d(TAG, "Reshow all words");
                     wordPopupWindow.getContentView().setAlpha(1);
                     resetAllButtons();
@@ -622,6 +621,8 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        wordPopupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
 
         // Update leaderboards
         updateLeaderBoards();
