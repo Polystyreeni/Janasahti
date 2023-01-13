@@ -374,7 +374,6 @@ public class MainActivity extends AppCompatActivity {
             btn.setTextColor(defaultLetterColor);
         }
         selectedButtons.clear();
-        Log.d(TAG, "MotionEventPos: " + motionEvent.getRawX() + " " + motionEvent.getRawY());
 
         // Error margins
         int widthError = tiles.get(0).getWidth() / 2 - 10;
@@ -545,8 +544,6 @@ public class MainActivity extends AppCompatActivity {
             tiles.get(button).setBackground(
                     AppCompatResources.getDrawable(getApplicationContext(), R.drawable.wordgame_tile_blue));
         }
-
-        Log.d(TAG, "Highlighted word: " + sb.toString());
     }
 
     // Game end functionality
@@ -625,7 +622,7 @@ public class MainActivity extends AppCompatActivity {
                 if(motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                     if(wordPopupWindow.getContentView().getAlpha() > 0.9)
                         return false;
-                    Log.d(TAG, "Reshow all words");
+
                     wordPopupWindow.getContentView().setAlpha(1);
                     resetAllButtons();
 
