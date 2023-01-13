@@ -13,7 +13,7 @@ import com.android.volley.toolbox.Volley;
 public class VersionManager {
     private static final String TAG = "VersionManager";
 
-    private static final String version = "1.2.1";
+    private static final String version = "1.3.0";
     private static final String versionLink = "https://drive.google.com/uc?export=download&id=1KusEpu5D6fUBFWZnDFUeA0A7FWGKiMDX";
 
     public static String getVersion() {
