@@ -12,7 +12,7 @@
     <string name="new_version_header">Päivitys saatavilla</string>
     <string name="new_version_info">Sovelluksen käytettävyys on läpikäynyt kehitystä.
     Uuden version voi ladata alla olevasta linkistä:</string>
-    <string name="new_version_number">Asennettu versio: %1$s | Uusin versio: %2$s</string>
+    <string name="new_version_number">Nykyinen versio: %1$s | Uusi versio: %2$s</string>
     <string name="new_version_link">https://github.com/Polystyreeni/Janasahti/releases</string>
 
 </resources>

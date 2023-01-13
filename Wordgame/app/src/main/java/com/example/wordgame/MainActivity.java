@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout wordsLayout;
     private ConstraintLayout baseLayout;
     private PopupWindow wordPopupWindow;
+    private PopupWindow displayWordPopup;
 
     // Visual attributes
     private int foundWordColor = Color.DKGRAY;
@@ -525,7 +526,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     // Scroll to the bottom of found words view to always show latest found word
     private void updateFoundWordsPosition() {
         View lastChild = foundWordsScrollView.getChildAt(foundWordsScrollView.getChildCount() - 1);
@@ -587,12 +587,15 @@ public class MainActivity extends AppCompatActivity {
             view.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View view) {
+                    if(wordPopupWindow.getContentView().getAlpha() < 0.9)
+                        return false;
                     Log.d(TAG, "Show word: " + word);
                     int[] colorTiles = WordSolver.getTiles(word, boardString);
                     highLightButtons(colorTiles);
                     TextView textView = (TextView)view;
                     textView.setTextColor(Color.BLUE);
                     wordPopupWindow.getContentView().setAlpha(0.1f);
+                    CreateWordDisplayPopup(textView.getText());
                     return true;
                 }
             });
@@ -609,13 +612,26 @@ public class MainActivity extends AppCompatActivity {
         wordPopupWindow.setTouchInterceptor(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
-                Log.d(TAG, "On touch popup with action: " + MotionEvent.actionToString(motionEvent.getAction()));
                 if(motionEvent.getAction() == MotionEvent.ACTION_OUTSIDE) {
-                    if(wordPopupWindow.getContentView().getAlpha() > 0.9)
+                    if(wordPopupWindow.getContentView().getAlpha() < 0.9) {
+                        wordPopupWindow.getContentView().setAlpha(1);
+                        resetAllButtons();
+                        if(displayWordPopup != null) {
+                            displayWordPopup.dismiss();
+                        }
                         return true;
+                    }
+                }
+                if(motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                    if(wordPopupWindow.getContentView().getAlpha() > 0.9)
+                        return false;
                     Log.d(TAG, "Reshow all words");
                     wordPopupWindow.getContentView().setAlpha(1);
                     resetAllButtons();
+
+                    if(displayWordPopup != null) {
+                        displayWordPopup.dismiss();
+                    }
                     return true;
                 }
                 return false;
@@ -627,7 +643,22 @@ public class MainActivity extends AppCompatActivity {
         // Update leaderboards
         updateLeaderBoards();
 
-        new Handler().postDelayed(() -> enterScoreboard(wordPopupWindow), 10000);
+        new Handler().postDelayed(() -> enterScoreboard(), 10000);
+    }
+
+    private void CreateWordDisplayPopup(CharSequence word) {
+        LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.found_word_popup, null);
+
+        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
+        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        displayWordPopup = new PopupWindow(popupView, width, height, false);
+
+        displayWordPopup.setAnimationStyle(R.style.Animation_AppCompat_Tooltip);
+        TextView textView = popupView.findViewById(R.id.displayWordTextView);
+        textView.setText(word);
+
+        displayWordPopup.showAtLocation(popupView, Gravity.BOTTOM, 0, 0);
     }
 
     // Sort words according to length
@@ -639,10 +670,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Start scoreboard activity
-    private void enterScoreboard(PopupWindow window) {
-        // Clear the popup containing all words
-        if(window != null)
-            window.dismiss();
+    private void enterScoreboard() {
+        // Clear the popups (if exist)
+        if(wordPopupWindow != null)
+            wordPopupWindow.dismiss();
+        if(displayWordPopup != null) {
+            displayWordPopup.dismiss();
+        }
 
         String roundData = username + "/" +
                 currentScore + "/" + findBestWord();
