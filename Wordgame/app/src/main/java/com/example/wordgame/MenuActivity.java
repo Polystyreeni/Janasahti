@@ -383,9 +383,9 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     public void onVersionRetrieved(String latestVersion) {
-
         if(latestVersion.isEmpty()) {
             Toast.makeText(MenuActivity.this, R.string.error_version, Toast.LENGTH_SHORT).show();
+            versionChecked = true;
             return;
         }
 
