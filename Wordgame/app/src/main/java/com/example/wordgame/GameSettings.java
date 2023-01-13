@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 // A class containing game specific constats and game rules
 public class GameSettings {
-    private static final long gameDuration = 20000; // Time in ms of one game
+    private static final long gameDuration = 90000; // Time in ms of one game (default 90000)
 
     // How much score is granted from given length of word
     private static final HashMap<Integer, Integer> scoreTable = new HashMap<Integer, Integer>() {
@@ -30,7 +30,7 @@ public class GameSettings {
     private static int oledProtectionEnabled = 0;
 
     // Debug settings
-    private static final boolean useFirebase = false;
+    private static final boolean useFirebase = true;
 
     public static long getGameDuration() {
         return gameDuration;
