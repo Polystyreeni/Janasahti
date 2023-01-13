@@ -9,8 +9,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Html;
+import android.text.Spanned;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -131,10 +134,14 @@ public class ScoreboardActivity extends AppCompatActivity {
 
     // Shows info from users previous game
     private void showPersonalScore(HighscoreData data) {
-        double percentage = (double)data.getScore() / (double)BoardManager.getNextBoard().getMaxScore();
-        String text = String.format("%s: %d pistettä, %.2f %s%nPisin löydetty sana: %s", data.getUserName(),
-                data.getScore(), percentage * 100, "%", data.getBestWord());
-        scoreTextView.setText(text);
+        float percentage = (float)data.getScore() / (float)BoardManager.getNextBoard().getMaxScore();
+        //String text = String.format("%s%n%d pistettä, %.2f %s%nPisin löydetty sana: %s", data.getUserName(),
+        //        data.getScore(), percentage * 100, "%", data.getBestWord());
+
+        String text = getResources().getString(R.string.scoreboard_info,
+                data.getUserName(), data.getScore(), percentage * 100, "%", data.getBestWord());
+
+        scoreTextView.setText(TextUtils.getSpannedText(text));
     }
 
     private void startGame() {
@@ -144,7 +151,7 @@ public class ScoreboardActivity extends AppCompatActivity {
     // Start the MainActivity with a new board
     private void startNewGame() {
         limitScores();
-        Log.d("ScoreBoardActivity", "Starting new game");
+        Log.d(TAG, "Starting new game");
         Intent intent = new Intent(ScoreboardActivity.this, MainActivity.class);
         intent.putExtra(MainActivity.EXTRA_MESSAGE, username);
         startActivity(intent);

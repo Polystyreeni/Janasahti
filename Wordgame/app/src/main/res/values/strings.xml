@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Janasahti</string>
     <string name="general_error">Virhe: </string>
@@ -14,5 +15,8 @@
     Uuden version voi ladata alla olevasta linkistä:</string>
     <string name="new_version_number">Nykyinen versio: %1$s | Uusi versio: %2$s</string>
     <string name="new_version_link">https://github.com/Polystyreeni/Janasahti/releases</string>
+    <string name="scoreboard_info"><![CDATA[
+    <b>%1$s</b><br><b>%2$d</b> pistettä, %3$.2f %4$s<br>Pisin löydetty sana: <i>%5$s</i>
+    ]]></string>
 
 </resources>
