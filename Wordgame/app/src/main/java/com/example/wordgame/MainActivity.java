@@ -1,6 +1,5 @@
 package com.example.wordgame;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -11,24 +10,17 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.media.AudioAttributes;
-import android.media.AudioManager;
-import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -89,11 +81,7 @@ public class MainActivity extends AppCompatActivity {
     private Random random;
 
     // Sound
-    private SoundPool soundPool;
-    private AudioManager audioManager;
-    private float volume;
-    private static final int STREAM_TYPE = AudioManager.STREAM_MUSIC;
-    private static final int MAX_STREAMS = 5;
+    private AudioHandler audioHandler;
     private int soundIdTimer;
     private int soundIdAccept;
     private int soundIdDeny;
@@ -126,18 +114,28 @@ public class MainActivity extends AppCompatActivity {
             int minutes = seconds / 60;
             seconds = seconds % 60;
 
-            timerTextView.setText(String.format("%d:%02d", minutes, seconds));
+            //timerTextView.setText(String.format("%d:%02d", minutes, seconds));
+            timerTextView.setText(getResources().getString(R.string.gameboard_timer, minutes, seconds));
             if(millis < 10000) {
                 timerTextView.setTextColor(Color.RED);
 
                 // Play tick sound every other iteration of this function call
                 if(tickCounter % 2 == 0) {
-                    soundPool.play(soundIdTimer, volume, volume, 1,0, 1f);
+                    //soundPool.play(soundIdTimer, volume, volume, 1,0, 1f);
+                    audioHandler.playSound(soundIdTimer, audioHandler.getVolume(), audioHandler.getVolume(), 1, 0, 1f);
                 }
                 tickCounter++;
             }
 
             timerHandler.postDelayed(this, 500);
+        }
+    };
+
+    final Handler scoreBoardHandler = new Handler();
+    final Runnable scoreBoardRunnable = new Runnable() {
+        @Override
+        public void run() {
+            enterScoreboard();
         }
     };
 
@@ -183,28 +181,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String boardString = activeBoard.getBoardString();
-        scoreText.setText(String.format("%d / %d", currentScore, activeBoard.getMaxScore()));
+        scoreText.setText(getResources().getString(R.string.gameboard_current_score, currentScore,
+                activeBoard.getMaxScore()));
 
-        // Audio initialization
-        audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-        float currentVolumeIndex = (float) audioManager.getStreamVolume(STREAM_TYPE);
-        float maxVolumeIndex  = (float) audioManager.getStreamMaxVolume(STREAM_TYPE);
-        this.volume = currentVolumeIndex / maxVolumeIndex;
-
-        this.setVolumeControlStream(STREAM_TYPE);
-
-        AudioAttributes audioAttrib = new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_GAME)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build();
-
-        SoundPool.Builder builder = new SoundPool.Builder();
-        builder.setAudioAttributes(audioAttrib).setMaxStreams(MAX_STREAMS);
-
-        soundPool = builder.build();
-        soundIdTimer = soundPool.load(this, R.raw.tick, 1);
-        soundIdAccept = soundPool.load(this, R.raw.snd_word_accept, 1);
-        soundIdDeny = soundPool.load(this, R.raw.snd_word_deny, 1);
+        audioHandler = new AudioHandler(this);
+        soundIdTimer = audioHandler.addSoundToPool(R.raw.tick, 1);
+        soundIdAccept = audioHandler.addSoundToPool(R.raw.snd_word_accept, 1);
+        soundIdDeny = audioHandler.addSoundToPool(R.raw.snd_word_deny, 1);
 
         startTime = System.currentTimeMillis();
         timerHandler.postDelayed(timerRunnable, 0);
@@ -214,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
         final int boardHeight = 4;
         initializeGameBoard(boardString, boardWidth, boardHeight);
 
-        // Set buttons to proper size when layout is drawn
+        // Set buttons to proper size after layout is drawn
         linearLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -229,8 +212,7 @@ public class MainActivity extends AppCompatActivity {
                 for(Button btn : tiles) {
                     btn.setWidth(width / boardWidth);
                     btn.setHeight(height / boardHeight);
-                    btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, width / (2 * boardWidth * boardWidth));
-                    //btn.setTextSize(btn.getMeasuredWidth() / 9);
+                    btn.setTextSize(TextUtils.getTileTextSize(getWindowManager()));
                 }
             }
         });
@@ -277,8 +259,20 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, "Main Board OnDestroy");
         timerHandler.removeCallbacks(timerRunnable);
+        scoreBoardHandler.removeCallbacks(scoreBoardRunnable);
+
+        if(wordPopupWindow != null) {
+            wordPopupWindow.dismiss();
+        }
+        if(displayWordPopup != null) {
+            displayWordPopup.dismiss();
+        }
     }
 
+    /**
+     * Adding bias values to game board UI-elements, when OLED-protection mode is on
+     * This makes sure elements are not always in the same place
+     */
     private void modifyLayoutParameters() {
         int widthBias = random.nextInt(5);
         int heightBias = random.nextInt(5);
@@ -314,9 +308,11 @@ public class MainActivity extends AppCompatActivity {
 
             linearLayout.addView(horzLayout);
 
+            int textSize = TextUtils.getTileTextSize(getWindowManager());
+
             for(int row = 0; row < boardWidth; row++) {
                 Button tile = new Button(this);
-                tile.setTextSize(20);
+                tile.setTextSize(textSize);
                 tile.setClickable(false);
                 tile.setMinimumWidth(0);
                 tile.setMinimumHeight(1);
@@ -333,24 +329,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Creates a mirrored version of the game board to prevent same board showing up all the time
+     * @param boardString the board to mirror
+     * @return mirrored board
+     */
     private String randomizeBoardString(String boardString) {
         int randInt = random.nextInt(100);
-        //Log.d(TAG, "Gameboard random value: " + randInt);
         if(randInt < 25) {
             return boardString;
         }
         else if(randInt > 25 && randInt < 50) {
-            //Log.d(TAG, "Game board reversed");
             return new StringBuilder(boardString).reverse().toString();
         }
 
         else if(randInt > 50 && randInt < 75) {
-            //Log.d(TAG, "Game board complement");
             return getComplementBoard(boardString).toString();
         }
 
         else {
-            //Log.d(TAG, "Game board complement reverse");
             return getComplementBoard(boardString).reverse().toString();
         }
     }
@@ -375,7 +372,7 @@ public class MainActivity extends AppCompatActivity {
         }
         selectedButtons.clear();
 
-        // Error margins
+        // Error margins (can be this much outside the button center)
         int widthError = tiles.get(0).getWidth() / 2 - 10;
         int heightError = tiles.get(0).getHeight() / 2 - 10;
 
@@ -431,7 +428,6 @@ public class MainActivity extends AppCompatActivity {
                     // Clear buttons that come after re-selected tile
                     if(tileIndex < selectedButtons.size() - 1) {
                         while(tileIndex <= selectedButtons.size() - 1) {
-                            Log.d(TAG, "Removing tile, list size: " + selectedButtons.size());
                             selectedButtons.get(tileIndex).setBackground(defaultTile);
                             selectedButtons.get(tileIndex).setTextColor(defaultLetterColor);
                             selectedButtons.remove(tileIndex);
@@ -466,12 +462,14 @@ public class MainActivity extends AppCompatActivity {
             if(word.equals(formedWord) && !wordsFound.contains(formedWord)) {
                 TextView wordView = new TextView(getApplicationContext());
                 wordView.setTextColor(foundWordColor);
-                String wordText = String.format("%d %s", GameSettings.getScoreForLength(formedWord.length()),
-                        formedWord);
-                wordView.setText(wordText);
+
+                String wordText = getResources().getString(R.string.gameboard_found_word,
+                        GameSettings.getScoreForLength(formedWord.length()), formedWord);
+                wordView.setText(TextUtils.getSpannedText(wordText));
                 wordsLayout.addView(wordView);
                 currentScore += GameSettings.getScoreForLength(formedWord.length());
-                scoreText.setText(String.format("%d / %d", currentScore, activeBoard.getMaxScore()));
+                scoreText.setText(getResources().getString(R.string.gameboard_current_score, currentScore,
+                        activeBoard.getMaxScore()));
                 wordsFound.add(formedWord);
                 isValidWord = true;
                 break;
@@ -485,7 +483,8 @@ public class MainActivity extends AppCompatActivity {
             drawable = AppCompatResources.getDrawable(getApplicationContext(), R.drawable.wordgame_tile_blue);
 
         int soundId = isValidWord ? soundIdAccept : soundIdDeny;
-        soundPool.play(soundId, volume, volume, 1,0, 1f);
+        //soundPool.play(soundId, volume, volume, 1,0, 1f);
+        audioHandler.playSound(soundId, audioHandler.getVolume(), audioHandler.getVolume(), 1, 0, 1f);
 
         for(TextView button : selectedButtons) {
             button.setBackground(drawable);
@@ -494,7 +493,7 @@ public class MainActivity extends AppCompatActivity {
         selectingActive = false;
 
         // Clear coloring after 1 second
-        new Handler().postDelayed(() -> resetButtons(), 1000);
+        new Handler().postDelayed(this::resetButtons, 1000);
     }
 
     // Get the center point of the button
@@ -551,6 +550,8 @@ public class MainActivity extends AppCompatActivity {
     private void gameEnd() {
         gameActive = false;
 
+        resetAllButtons();
+
         // Initialize the popup-window to show all words and score
         LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = inflater.inflate(R.layout.game_end_popup, null);
@@ -569,7 +570,7 @@ public class MainActivity extends AppCompatActivity {
         for(String word : activeBoard.getWords()) {
             if(word.length() != previousLen) {
                 TextView header = new TextView(this);
-                header.setText(String.format("%d kirjainta", word.length()));
+                header.setText(getResources().getString(R.string.wordlist_word_len, word.length()));
                 header.setTextColor(Color.BLACK);
                 header.setAllCaps(true);
                 header.setTypeface(header.getTypeface(), Typeface.BOLD);
@@ -606,6 +607,7 @@ public class MainActivity extends AppCompatActivity {
         wordPopupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
         wordPopupWindow.setOutsideTouchable(true);
 
+        // Show words on board functionality
         wordPopupWindow.setTouchInterceptor(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -616,8 +618,9 @@ public class MainActivity extends AppCompatActivity {
                         if(displayWordPopup != null) {
                             displayWordPopup.dismiss();
                         }
-                        return true;
                     }
+
+                    return true;
                 }
                 if(motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                     if(wordPopupWindow.getContentView().getAlpha() > 0.9)
@@ -640,9 +643,10 @@ public class MainActivity extends AppCompatActivity {
         // Update leaderboards
         updateLeaderBoards();
 
-        new Handler().postDelayed(() -> enterScoreboard(), 10000);
+        scoreBoardHandler.postDelayed(scoreBoardRunnable, GameSettings.getScoreBoardDuration());
     }
 
+    // Create a popup showing the currently highlighted word
     private void CreateWordDisplayPopup(CharSequence word) {
         LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = inflater.inflate(R.layout.found_word_popup, null);
