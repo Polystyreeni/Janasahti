@@ -9,7 +9,6 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +22,7 @@ public class BoardManager {
 
     private static String latestError = "";
     private static Board nextBoard = null;
-    private static Random randGen = new Random();
+    private static final Random randGen = new Random();
     private static boolean shouldGenerateBoard = false;
     private static int previousBoard = -1;
 
