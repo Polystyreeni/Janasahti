@@ -1,5 +1,6 @@
 package com.example.wordgame;
 
+import android.graphics.Point;
 import android.os.Build;
 import android.text.Html;
 import android.text.Spanned;
@@ -25,9 +26,28 @@ public class TextUtils {
         windowManager.getDefaultDisplay().getMetrics(dm);
 
         double width = dm.widthPixels / dm.xdpi;
-        Log.d(TAG, "The width of screen is: " + width);
+        //double height = dm.heightPixels / dm.ydpi;
+        //double baseSize = Math.max(width, height);
+
+        //Log.d(TAG, "The width of screen is: " + width);
 
         // Totally 100% arbitrary equation that has not been tested at all
-        return (int)(width * 12);
+        return (int)(width * 14);
     }
+
+    /*public static double getScreenWidth(WindowManager windowManager) {
+        DisplayMetrics dm = new DisplayMetrics();
+        windowManager.getDefaultDisplay().getMetrics(dm);
+
+        final Point size = new Point();
+        windowManager.getDefaultDisplay().getRealSize(size);
+
+        double width = dm.widthPixels;
+        return width;
+
+        //return size.x;
+
+        //double width = dm.widthPixels / dm.xdpi;
+        //return width;
+    }*/
 }

@@ -209,11 +209,14 @@ public class MainActivity extends AppCompatActivity {
                     modifyLayoutParameters();
                 }
 
+                int textSize = TextUtils.getTileTextSize(getWindowManager());
                 for(Button btn : tiles) {
                     btn.setWidth(width / boardWidth);
                     btn.setHeight(height / boardHeight);
-                    btn.setTextSize(TextUtils.getTileTextSize(getWindowManager()));
+                    btn.setTextSize(textSize);
                 }
+                // double actualWidth = TextUtils.getScreenWidth(getWindowManager());
+                // Toast.makeText(MainActivity.this, String.valueOf(actualWidth), Toast.LENGTH_SHORT).show();
             }
         });
 
