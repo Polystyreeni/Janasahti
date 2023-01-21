@@ -4,9 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
-import androidx.core.view.ViewCompat;
 
-import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -18,12 +16,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,7 +38,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.sql.Time;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,7 +53,6 @@ public class MenuActivity extends AppCompatActivity {
     private Button startButton;
     private EditText userNameField;
     private ProgressBar boardLoadProgressBar;
-    private Button settingsButton;
     private ConstraintLayout layout;
     private View mainMenuBackground;
 
@@ -98,9 +92,10 @@ public class MenuActivity extends AppCompatActivity {
         userNameField = findViewById(R.id.usernameEditText);
         boardLoadProgressBar = findViewById(R.id.boardLoadProgressBar);
         boardLoadProgressBar.setVisibility(View.GONE);
-        settingsButton = findViewById(R.id.settingsButton);
         layout = findViewById(R.id.menuLayout);
         mainMenuBackground = findViewById(R.id.mainMenuBackView);
+
+        Button settingsButton = findViewById(R.id.settingsButton);
         final TextView versionTextView = findViewById(R.id.versionText);
 
         mFireStore = FirebaseFirestore.getInstance();
@@ -109,74 +104,52 @@ public class MenuActivity extends AppCompatActivity {
 
         // Create the board in background while in main menu
         BoardManager.setRandomSeed(Calendar.getInstance().getTimeInMillis());
-        boardThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                BoardManager.generateBoard();
-            }
-        });
+        boardThread = new Thread(BoardManager::generateBoard);
 
         boardThread.start();
 
-        startButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(boardThread.isAlive()) {
-                    Log.d(TAG, "Board thread alive, waiting...");
-                    boardLoadProgressBar.setVisibility(View.VISIBLE);
-                    boardLoadHandler.postDelayed(boardLoadRunnable, 0);
-                    startButton.setClickable(false);
-                    return;
-                }
-
-                startGame();
+        startButton.setOnClickListener(view -> {
+            if(boardThread.isAlive()) {
+                Log.d(TAG, "Board thread alive, waiting...");
+                boardLoadProgressBar.setVisibility(View.VISIBLE);
+                boardLoadHandler.postDelayed(boardLoadRunnable, 0);
+                startButton.setClickable(false);
+                return;
             }
+
+            startGame();
         });
 
-        settingsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Initialize the popup-window to show all words and score
-                LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
-                View popupView = inflater.inflate(R.layout.game_settings_popup, null);
+        settingsButton.setOnClickListener(view -> {
+            // Initialize the popup-window to show all words and score
+            LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
+            View popupView = inflater.inflate(R.layout.game_settings_popup, null);
 
-                CheckBox darkBox = popupView.findViewById(R.id.settingCheckboxColor);
-                CheckBox oledBox = popupView.findViewById(R.id.settingCheckboxOled);
-                Button returnButton = popupView.findViewById(R.id.settingsReturnButton);
+            CheckBox darkBox = popupView.findViewById(R.id.settingCheckboxColor);
+            CheckBox oledBox = popupView.findViewById(R.id.settingCheckboxOled);
+            Button returnButton = popupView.findViewById(R.id.settingsReturnButton);
 
-                darkBox.setChecked(GameSettings.getDarkModeEnabled() > 0);
-                oledBox.setChecked(GameSettings.getOledProtectionEnabled() > 0);
+            darkBox.setChecked(GameSettings.getDarkModeEnabled() > 0);
+            oledBox.setChecked(GameSettings.getOledProtectionEnabled() > 0);
 
-                darkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                        int value = b ? 1 : 0;
-                        GameSettings.setDarkModeEnabled(value);
-                        updateBackground();
-                    }
-                });
+            darkBox.setOnCheckedChangeListener((compoundButton, b) -> {
+                int value = b ? 1 : 0;
+                GameSettings.setDarkModeEnabled(value);
+                updateBackground();
+            });
 
-                oledBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                        int value = b ? 1 : 0;
-                        GameSettings.setOledProtectionEnabled(value);
-                    }
-                });
+            oledBox.setOnCheckedChangeListener((compoundButton, b) -> {
+                int value = b ? 1 : 0;
+                GameSettings.setOledProtectionEnabled(value);
+            });
 
-                int width = LinearLayout.LayoutParams.WRAP_CONTENT;
-                int height = LinearLayout.LayoutParams.WRAP_CONTENT;
-                final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
-                popupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
-                popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+            int width = LinearLayout.LayoutParams.WRAP_CONTENT;
+            int height = LinearLayout.LayoutParams.WRAP_CONTENT;
+            final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
+            popupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
+            popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
 
-                returnButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        popupWindow.dismiss();
-                    }
-                });
-            }
+            returnButton.setOnClickListener(view1 -> popupWindow.dismiss());
         });
 
         // Set username to the stored profile name (if exists)
@@ -263,18 +236,8 @@ public class MenuActivity extends AppCompatActivity {
             Map<String, Object> docData = new HashMap<>();
             docData.put("userName", username);
             sessionReference.document(document).set(docData)
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            Log.d(TAG, "Userprofile successfully written!");
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.w(TAG, "Error writing Userprofile", e);
-                        }
-                    });
+                    .addOnSuccessListener(aVoid -> Log.d(TAG, "Userprofile successfully written!"))
+                    .addOnFailureListener(e -> Log.w(TAG, "Error writing Userprofile", e));
         }
 
         createUserProfile(username);
@@ -311,8 +274,7 @@ public class MenuActivity extends AppCompatActivity {
             inputStream = ctx.openFileInput(USERFILENAME);
             InputStreamReader inputReader = new InputStreamReader(inputStream);
             BufferedReader bufferedReader = new BufferedReader(inputReader);
-            String name = bufferedReader.readLine();
-            return name;
+            return bufferedReader.readLine();
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -365,19 +327,16 @@ public class MenuActivity extends AppCompatActivity {
         if(!GameSettings.UseFirebase())
             return;
         firebaseAuth.signInAnonymously()
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "signInAnonymously:success");
-                            firebaseUser = firebaseAuth.getCurrentUser();
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "signInAnonymously:failure", task.getException());
-                            Toast.makeText(MenuActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
-                        }
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        // Sign in success, update UI with the signed-in user's information
+                        Log.d(TAG, "signInAnonymously:success");
+                        firebaseUser = firebaseAuth.getCurrentUser();
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        Log.w(TAG, "signInAnonymously:failure", task.getException());
+                        Toast.makeText(MenuActivity.this, "Authentication failed.",
+                                Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -417,12 +376,9 @@ public class MenuActivity extends AppCompatActivity {
         popupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
         popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
 
-        cancelButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                versionChecked = true;
-                popupWindow.dismiss();
-            }
+        cancelButton.setOnClickListener(view -> {
+            versionChecked = true;
+            popupWindow.dismiss();
         });
     }
 }
