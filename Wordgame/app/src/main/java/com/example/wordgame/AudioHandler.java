@@ -24,9 +24,7 @@ public class AudioHandler {
     public AudioHandler(AppCompatActivity activity) {
         this.activity = activity;
         this.audioManager = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
-        //this.currentVolumeIndex = (float) audioManager.getStreamVolume(STREAM_TYPE);
-        //this.maxVolumeIndex  = (float) audioManager.getStreamMaxVolume(STREAM_TYPE);
-        //this.volume = currentVolumeIndex / maxVolumeIndex;
+
         updateVolume();
 
         activity.setVolumeControlStream(STREAM_TYPE);
@@ -40,9 +38,6 @@ public class AudioHandler {
         builder.setAudioAttributes(audioAttrib).setMaxStreams(MAX_STREAMS);
 
         this.soundPool = builder.build();
-        //soundIdTimer = soundPool.load(this, R.raw.tick, 1);
-        //soundIdAccept = soundPool.load(this, R.raw.snd_word_accept, 1);
-        //soundIdDeny = soundPool.load(this, R.raw.snd_word_deny, 1);
     }
 
     public int addSoundToPool(int soundId, int priority) {
