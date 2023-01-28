@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private final HashSet<String> wordsFound = new HashSet<>();
     private String boardString;
     private Random random;
+    private boolean gameStopped = false;
 
     // Sound
     private AudioHandler audioHandler;
@@ -116,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
 
             //timerTextView.setText(String.format("%d:%02d", minutes, seconds));
             timerTextView.setText(getResources().getString(R.string.gameboard_timer, minutes, seconds));
-            if(millis < 10000) {
+            if(millis < 10000 && !gameStopped) {
                 timerTextView.setTextColor(Color.RED);
 
                 // Play tick sound every other iteration of this function call
@@ -135,7 +136,8 @@ public class MainActivity extends AppCompatActivity {
     final Runnable scoreBoardRunnable = new Runnable() {
         @Override
         public void run() {
-            enterScoreboard();
+            if(!gameStopped)
+                enterScoreboard();
         }
     };
 
@@ -215,8 +217,6 @@ public class MainActivity extends AppCompatActivity {
                     btn.setHeight(height / boardHeight);
                     btn.setTextSize(textSize);
                 }
-                // double actualWidth = TextUtils.getScreenWidth(getWindowManager());
-                // Toast.makeText(MainActivity.this, String.valueOf(actualWidth), Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -269,6 +269,26 @@ public class MainActivity extends AppCompatActivity {
         }
         if(displayWordPopup != null) {
             displayWordPopup.dismiss();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        Log.d(TAG, "Main Board OnStop()");
+        gameStopped = true;
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        Log.d(TAG, "Main Board OnRestart()");
+        gameStopped = false;
+
+        if(!gameActive) {
+            returnToMain();
         }
     }
 
