@@ -1,5 +1,6 @@
 package com.example.wordgame;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -9,15 +10,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.Html;
-import android.text.Spanned;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -44,9 +46,14 @@ public class ScoreboardActivity extends AppCompatActivity {
     private TextView bestPlayersTextView;
     private ConstraintLayout scoreBoardLayout;
 
+    // Audio
+    private AudioHandler audioHandler;
+    private int soundIdFirst;
+
     // Firebase
     private FirebaseFirestore mFireStore;
     private CollectionReference sessionReference;
+    private FirebaseAuth firebaseAuth;
     private String collectionPath;
 
     private Thread boardThread = null;
@@ -74,6 +81,10 @@ public class ScoreboardActivity extends AppCompatActivity {
         scoreBoardLayout = findViewById(R.id.scoreboardLayout);
         bestPlayersTextView = findViewById(R.id.scoreboardTitleTextView);
 
+        // Audio handler
+        audioHandler = new AudioHandler(this);
+        soundIdFirst = audioHandler.addSoundToPool(R.raw.snd_score_first, 1);
+
         // Get data from previous game
         Intent intent = getIntent();
         String intentStr = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
@@ -85,6 +96,8 @@ public class ScoreboardActivity extends AppCompatActivity {
             mFireStore = FirebaseFirestore.getInstance();
             collectionPath = FIRESTORE_PREFIX + BoardManager.getNextBoard().getBoardString();
             sessionReference = mFireStore.collection(collectionPath);
+            firebaseAuth = FirebaseAuth.getInstance();
+            highscoreData.setUserId(firebaseAuth.getUid());
         }
 
         // Initialize recyclerView
@@ -134,13 +147,7 @@ public class ScoreboardActivity extends AppCompatActivity {
 
     // Shows info from users previous game
     private void showPersonalScore(HighscoreData data) {
-        float percentage = (float)data.getScore() / (float)BoardManager.getNextBoard().getMaxScore();
-        //String text = String.format("%s%n%d pistettä, %.2f %s%nPisin löydetty sana: %s", data.getUserName(),
-        //        data.getScore(), percentage * 100, "%", data.getBestWord());
-
-        String text = getResources().getString(R.string.scoreboard_info,
-                data.getUserName(), data.getScore(), percentage * 100, "%", data.getBestWord());
-
+        String text = getPerformanceText(data);
         scoreTextView.setText(TextUtils.getSpannedText(text));
     }
 
@@ -180,6 +187,32 @@ public class ScoreboardActivity extends AppCompatActivity {
         return new HighscoreData(username, score, bestWord);
     }
 
+    private void checkRanking() {
+        int maxscore = highscoreData.getScore();
+
+        Log.d(TAG, "Number of highscores: " + highScores.size());
+
+        for(HighscoreData data : highScores) {
+            if(data.getScore() > maxscore && !data.getUserId().equals(highscoreData.getUserId())) {
+                Log.d(TAG, "Found someone with better score than you");
+                return;
+            }
+        }
+
+        // You are the first one !!!
+        String text = new String(Character.toChars(0x1F451));
+        text += getPerformanceText(highscoreData);
+        scoreTextView.setText(TextUtils.getSpannedText(text));
+        audioHandler.playSound(soundIdFirst, audioHandler.getVolume(), audioHandler.getVolume(), 1, 0, 1.0f);
+    }
+
+    private String getPerformanceText(HighscoreData data) {
+        float percentage = (float)data.getScore() / (float)BoardManager.getNextBoard().getMaxScore();
+
+        return getResources().getString(R.string.scoreboard_info,
+                data.getUserName(), data.getScore(), percentage * 100, "%", data.getBestWord());
+    }
+
     private void setDarkMode() {
         scoreBoardLayout.setBackground(ContextCompat.getDrawable(getApplicationContext(),
                 R.drawable.background_gradient_dark));
@@ -192,8 +225,44 @@ public class ScoreboardActivity extends AppCompatActivity {
                 R.drawable.background_gradient_dark));
     }
 
-    // Sort and get highscore data from Firebase
     public void updateHighScores() {
+        if(!GameSettings.UseFirebase())
+            return;
+
+        // Sort and get data from Firebase
+        mFireStore.collection(collectionPath).orderBy("score", Query.Direction.DESCENDING)
+                .limit(GameSettings.getScoreBoardMaxCount())
+                .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if(!task.isSuccessful()) {
+                            Log.d(TAG, "Error retrieving high score data!");
+                            return;
+                        }
+                        highScores.clear();
+
+                        QuerySnapshot snapshot = task.getResult();
+                        List<DocumentSnapshot> documents = snapshot.getDocuments();
+
+                        for(DocumentSnapshot document : documents) {
+                            if(!document.exists()) {
+                                Log.d(TAG, "Requested document does not exist");
+                                continue;
+                            }
+                            HighscoreData data = document.toObject(HighscoreData.class);
+                            highScores.add(data);
+                            Log.d(TAG, "Fetched highscore data from firebase");
+                        }
+
+                        scoreBoardAdapter.notifyDataSetChanged();
+                        checkRanking();
+                    }
+                });
+
+    }
+
+    // Sort and get highscore data from Firebase
+    /*public void updateHighScores() {
         if(!GameSettings.UseFirebase())
             return;
         mFireStore.collection(collectionPath).orderBy("score", Query.Direction.DESCENDING)
@@ -211,11 +280,12 @@ public class ScoreboardActivity extends AppCompatActivity {
 
                     // Not optimal, but other methods refuse to work properly
                     scoreBoardAdapter.notifyDataSetChanged();
+                    checkRanking();
 
                 } else {
                     Log.d(TAG, "Snapshot is null");
                 }
             }
         });
-    }
+    }*/
 }
