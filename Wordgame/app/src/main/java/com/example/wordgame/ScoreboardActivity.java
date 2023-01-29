@@ -34,8 +34,10 @@ public class ScoreboardActivity extends AppCompatActivity {
     private final String TAG = "ScoreboardActivity";
     private final String FIRESTORE_PREFIX = "wg_board_";
 
+    // State
     private final List<HighscoreData> highScores = new ArrayList<>();
     private ScoreboardAdapter scoreBoardAdapter;
+    private boolean activityStopped = false;
 
     // User values
     private String username;
@@ -145,6 +147,23 @@ public class ScoreboardActivity extends AppCompatActivity {
             scoreBoardHandler.removeCallbacksAndMessages(null);
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        activityStopped = true;
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        activityStopped = false;
+
+        // Return to main menu if
+        if(boardThread == null || !boardThread.isAlive()) {
+            startNewGame();
+        }
+    }
+
     // Shows info from users previous game
     private void showPersonalScore(HighscoreData data) {
         String text = getPerformanceText(data);
@@ -158,6 +177,11 @@ public class ScoreboardActivity extends AppCompatActivity {
     // Start the MainActivity with a new board
     private void startNewGame() {
         limitScores();
+
+        if(activityStopped) {
+            return;
+        }
+
         Log.d(TAG, "Starting new game");
         Intent intent = new Intent(ScoreboardActivity.this, MainActivity.class);
         intent.putExtra(MainActivity.EXTRA_MESSAGE, username);
@@ -193,7 +217,7 @@ public class ScoreboardActivity extends AppCompatActivity {
         Log.d(TAG, "Number of highscores: " + highScores.size());
 
         for(HighscoreData data : highScores) {
-            if(data.getScore() > maxscore && !data.getUserId().equals(highscoreData.getUserId())) {
+            if(data.getScore() > maxscore) {
                 Log.d(TAG, "Found someone with better score than you");
                 return;
             }
@@ -251,10 +275,11 @@ public class ScoreboardActivity extends AppCompatActivity {
                             }
                             HighscoreData data = document.toObject(HighscoreData.class);
                             highScores.add(data);
+                            scoreBoardAdapter.notifyItemInserted(highScores.size() - 1);
                             Log.d(TAG, "Fetched highscore data from firebase");
                         }
 
-                        scoreBoardAdapter.notifyDataSetChanged();
+                        //scoreBoardAdapter.notifyDataSetChanged();
                         checkRanking();
                     }
                 });
