@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
         defaultTile = AppCompatResources.getDrawable(this, R.drawable.wordgame_tile);
 
         // Set UI component colors to match selected theme
-        if(GameSettings.getDarkModeEnabled() > 0) {
+        if(UserSettings.getDarkModeEnabled() > 0) {
             setDarkMode();
         }
 
@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
                 int width = linearLayout.getWidth();
                 int height = linearLayout.getHeight();
 
-                if(GameSettings.getOledProtectionEnabled() > 0) {
+                if(UserSettings.getOledProtectionEnabled() > 0) {
                     modifyLayoutParameters();
                 }
 

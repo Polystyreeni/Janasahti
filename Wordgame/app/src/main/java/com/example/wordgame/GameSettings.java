@@ -1,6 +1,8 @@
 package com.example.wordgame;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 // A class containing game specific constats and game rules
 public class GameSettings {
@@ -25,10 +27,6 @@ public class GameSettings {
 
     private static final int usernameMaxLength = 30;        // How long the username is allowed to be
 
-    // User settings
-    private static int darkModeEnabled = 0;
-    private static int oledProtectionEnabled = 0;
-
     // Debug settings
     private static final boolean useFirebase = true;
 
@@ -46,12 +44,6 @@ public class GameSettings {
         return scoreBoardMaxCount;
     }
     public static int getUsernameMaxLength() { return usernameMaxLength; }
-
-    public static int getDarkModeEnabled() { return darkModeEnabled; }
-    public static int getOledProtectionEnabled() {return oledProtectionEnabled;}
-
-    public static void setDarkModeEnabled(int value) {darkModeEnabled = value;}
-    public static void setOledProtectionEnabled(int value) {oledProtectionEnabled = value;}
 
     public static boolean UseFirebase() { return useFirebase; }
 }

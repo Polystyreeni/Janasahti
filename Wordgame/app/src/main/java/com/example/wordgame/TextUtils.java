@@ -26,6 +26,6 @@ public class TextUtils {
         double width = dm.widthPixels / dm.xdpi;
 
         // Totally 100% arbitrary equation that has not been tested at all
-        return (int)(width * 14);
+        return (int)(width * UserSettings.getTextScale());
     }
 }

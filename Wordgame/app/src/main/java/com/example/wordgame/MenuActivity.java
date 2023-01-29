@@ -129,18 +129,18 @@ public class MenuActivity extends AppCompatActivity {
             CheckBox oledBox = popupView.findViewById(R.id.settingCheckboxOled);
             Button returnButton = popupView.findViewById(R.id.settingsReturnButton);
 
-            darkBox.setChecked(GameSettings.getDarkModeEnabled() > 0);
-            oledBox.setChecked(GameSettings.getOledProtectionEnabled() > 0);
+            darkBox.setChecked(UserSettings.getDarkModeEnabled() > 0);
+            oledBox.setChecked(UserSettings.getOledProtectionEnabled() > 0);
 
             darkBox.setOnCheckedChangeListener((compoundButton, b) -> {
                 int value = b ? 1 : 0;
-                GameSettings.setDarkModeEnabled(value);
+                UserSettings.setDarkModeEnabled(value);
                 updateBackground();
             });
 
             oledBox.setOnCheckedChangeListener((compoundButton, b) -> {
                 int value = b ? 1 : 0;
-                GameSettings.setOledProtectionEnabled(value);
+                UserSettings.setOledProtectionEnabled(value);
             });
 
             int width = LinearLayout.LayoutParams.WRAP_CONTENT;
@@ -202,7 +202,7 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private void updateBackground() {
-        if(GameSettings.getDarkModeEnabled() > 0) {
+        if(UserSettings.getDarkModeEnabled() > 0) {
             layout.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_gradient_dark));
             mainMenuBackground.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.rounded_corner_black));
             userNameField.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.white));
@@ -289,8 +289,9 @@ public class MenuActivity extends AppCompatActivity {
             Context ctx = getApplicationContext();
             stream = ctx.openFileOutput(SETTINGSFILENAME, Context.MODE_PRIVATE);
 
-            String settings = String.valueOf(GameSettings.getDarkModeEnabled())
-                    + "/" + String.valueOf(GameSettings.getOledProtectionEnabled());
+            String settings = String.valueOf(UserSettings.getDarkModeEnabled())
+                    + "/" + String.valueOf(UserSettings.getOledProtectionEnabled())
+                    + "/" + String.valueOf(UserSettings.getTextScale());
 
             stream.write(settings.getBytes(StandardCharsets.UTF_8));
             stream.close();
@@ -302,6 +303,8 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private void readSettingsFile() {
+        UserSettings.initializeSettings();
+
         FileInputStream inputStream;
         try {
             Context ctx = getApplicationContext();
@@ -311,10 +314,16 @@ public class MenuActivity extends AppCompatActivity {
 
             String settingsStr = bufferedReader.readLine();
             String[] settings = settingsStr.split("/");
-            if(settings.length == 2) {
-                GameSettings.setDarkModeEnabled(Integer.parseInt(settings[0]));
-                GameSettings.setOledProtectionEnabled(Integer.parseInt(settings[1]));
+
+            for(int i = 0; i < settings.length; i++) {
+                UserSettings.userSettings.get(i).run(settings[i]);
             }
+
+            /*if(settings.length == 2) {
+                UserSettings.setDarkModeEnabled(Integer.parseInt(settings[0]));
+                UserSettings.setOledProtectionEnabled(Integer.parseInt(settings[1]));
+                UserSettings.setTextScale(Integer.parseInt(settings[2]));
+            }*/
         }
 
         catch (Exception ex) {

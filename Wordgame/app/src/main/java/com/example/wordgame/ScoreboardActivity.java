@@ -127,7 +127,7 @@ public class ScoreboardActivity extends AppCompatActivity {
         boardThread.start();
         scoreBoardHandler.postDelayed(this::startGame, GameSettings.getScoreBoardDuration());
 
-        if(GameSettings.getDarkModeEnabled() > 0) {
+        if(UserSettings.getDarkModeEnabled() > 0) {
             setDarkMode();
         }
     }
