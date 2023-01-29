@@ -43,6 +43,7 @@
         android:paddingTop="5dp"
         android:paddingEnd="0dp"
         android:paddingBottom="0dp"
+        android:textColor="@color/black"
         android:text="@string/settings_textSize" />
 
     <com.google.android.material.slider.Slider
