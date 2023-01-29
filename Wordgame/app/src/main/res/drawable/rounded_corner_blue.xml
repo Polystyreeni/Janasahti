@@ -13,4 +13,9 @@
         android:top="2dp" />
 
     <corners android:radius="8dp" />
+    <gradient
+        android:angle="270"
+        android:startColor="@color/blue_night"
+        android:endColor="@color/wet_asphalt"
+        android:type="linear" />
 </shape>

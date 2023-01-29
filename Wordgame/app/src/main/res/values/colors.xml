@@ -10,8 +10,9 @@
     <color name="tile_grey">#dcdde1</color>
     <color name="concrete_grey">#95a5a6</color>
     <color name="pico_void">#192a56</color>
-    <color name="wet_asphalt">#34495e</color>
+    <color name="wet_asphalt">#323E49</color>
     <color name="gold">#e1b12c</color>
+    <color name="almost_gold">#CFA327</color>
     <color name="blue_night">#353b48</color>
     <color name="orange">#c23616</color>
     <color name="dark_green">#32B10B</color>
