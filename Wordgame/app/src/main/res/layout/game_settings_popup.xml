@@ -4,41 +4,62 @@
     android:id="@+id/settingsMenuLinearLayout"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@drawable/rounder_corner">
+    android:background="@drawable/rounder_corner"
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/endScoreTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="30dp"
+        android:layout_marginLeft="30dp"
         android:layout_marginTop="30dp"
         android:layout_marginEnd="30dp"
+        android:layout_marginRight="30dp"
         android:layout_marginBottom="30dp"
-        android:textColor="@color/black"
+        android:paddingHorizontal="14dp"
         android:text="@string/settings_menu"
+        android:textColor="@color/black"
         android:textSize="24sp" />
 
     <CheckBox
+        android:id="@+id/settingCheckboxColor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/settings_colormode"
-        android:textColor="@color/black"
-        android:id="@+id/settingCheckboxColor"/>
+        android:textColor="@color/black" />
 
     <CheckBox
+        android:id="@+id/settingCheckboxOled"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/settings_amoled"
-        android:textColor="@color/black"
-        android:id="@+id/settingCheckboxOled"/>
+        android:textColor="@color/black" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="0dp"
+        android:paddingTop="5dp"
+        android:paddingEnd="0dp"
+        android:paddingBottom="0dp"
+        android:text="@string/settings_textSize" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/settingsTextSizeSlider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:stepSize="1"
+        android:value="14"
+        android:valueFrom="4"
+        android:valueTo="24" />
 
     <Button
+        android:id="@+id/settingsReturnButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="30dp"
         android:layout_marginEnd="30dp"
-        android:id="@+id/settingsReturnButton"
-        android:text="@string/settings_return"/>
+        android:text="@string/settings_return" />
 
 </LinearLayout>

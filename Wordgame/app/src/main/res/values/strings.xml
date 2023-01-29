@@ -8,6 +8,7 @@
     <string name="settings_menu">Asetukset</string>
     <string name="settings_amoled">OLED-suoja</string>
     <string name="settings_colormode">Tumma Teema</string>
+    <string name="settings_textSize">Kirjainkoko</string>
     <string name="settings_return">Palaa</string>
     <string name="error_version">Versiotiedon haku epäonnistui</string>
     <string name="new_version_header">Päivitys saatavilla</string>

@@ -23,10 +23,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+import com.google.android.material.slider.Slider;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -127,10 +124,12 @@ public class MenuActivity extends AppCompatActivity {
 
             CheckBox darkBox = popupView.findViewById(R.id.settingCheckboxColor);
             CheckBox oledBox = popupView.findViewById(R.id.settingCheckboxOled);
+            Slider textSizeSlider = popupView.findViewById(R.id.settingsTextSizeSlider);
             Button returnButton = popupView.findViewById(R.id.settingsReturnButton);
 
             darkBox.setChecked(UserSettings.getDarkModeEnabled() > 0);
             oledBox.setChecked(UserSettings.getOledProtectionEnabled() > 0);
+            textSizeSlider.setValue(UserSettings.getTextScale());
 
             darkBox.setOnCheckedChangeListener((compoundButton, b) -> {
                 int value = b ? 1 : 0;
@@ -141,6 +140,11 @@ public class MenuActivity extends AppCompatActivity {
             oledBox.setOnCheckedChangeListener((compoundButton, b) -> {
                 int value = b ? 1 : 0;
                 UserSettings.setOledProtectionEnabled(value);
+            });
+
+            textSizeSlider.addOnChangeListener((slider, value, fromUser) -> {
+                int intVal = Math.round(value);
+                UserSettings.setTextScale(intVal);
             });
 
             int width = LinearLayout.LayoutParams.WRAP_CONTENT;
@@ -318,12 +322,6 @@ public class MenuActivity extends AppCompatActivity {
             for(int i = 0; i < settings.length; i++) {
                 UserSettings.userSettings.get(i).run(settings[i]);
             }
-
-            /*if(settings.length == 2) {
-                UserSettings.setDarkModeEnabled(Integer.parseInt(settings[0]));
-                UserSettings.setOledProtectionEnabled(Integer.parseInt(settings[1]));
-                UserSettings.setTextScale(Integer.parseInt(settings[2]));
-            }*/
         }
 
         catch (Exception ex) {
