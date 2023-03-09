@@ -44,24 +44,21 @@ The contents of the files behind these URLs are as follows:
  */
 
 public class NetworkConfig {
-    private static final HashMap<String, String> URLCONFIG = new HashMap<>();
 
-    public static void initializeNetworkConfig() {
+    // REPLACE THIS URL WITH YOUR OWN
+    private static final String VERSION_URL = "DUMMY-URL-REPLACE-ME";
 
-        // REPLACE THIS URL WITH YOUR OWN
-        final String versionURL = "https://drive.google.com/uc?export=download&id=1KusEpu5D6fUBFWZnDFUeA0A7FWGKiMDX";
+    // REPLACE THIS URL WITH YOUR OWN
+    private static final String BOARD_LIST_URL = "DUMMY-URL-REPLACE-ME";
 
-        // REPLACE THIS URL WITH YOUR OWN
-        final String boardListURL = "https://drive.google.com/uc?export=download&id=1OdjRb5bXxBlwwOnD6qzp_eh2o3Q4F23a";
-
-        URLCONFIG.put("version", versionURL);
-        URLCONFIG.put("boardList", boardListURL);
-    }
+    private static final HashMap<String, String> URLCONFIG = new HashMap<String, String>() {
+        {
+            put("version", VERSION_URL);
+            put("boardList", BOARD_LIST_URL);
+        }
+    };
 
     public static String getUrl(String type) throws InvalidUrlRequestException {
-        if(URLCONFIG.size() <= 0)
-            initializeNetworkConfig();
-
         if(!URLCONFIG.containsKey(type)) {
             throw new InvalidUrlRequestException("The requested URL type was not found");
         }
