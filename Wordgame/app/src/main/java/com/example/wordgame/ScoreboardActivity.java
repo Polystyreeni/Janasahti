@@ -38,6 +38,7 @@ public class ScoreboardActivity extends AppCompatActivity {
     private final List<HighscoreData> highScores = new ArrayList<>();
     private ScoreboardAdapter scoreBoardAdapter;
     private boolean activityStopped = false;
+    private Board playedBoard = null;
 
     // User values
     private String username;
@@ -64,7 +65,7 @@ public class ScoreboardActivity extends AppCompatActivity {
     Runnable newBoardRunnable = new Runnable() {
         @Override
         public void run() {
-            if(boardThread.isAlive() || boardThread == null)
+            if(boardThread != null && boardThread.isAlive())
                 newBoardHandler.postDelayed(this, 500);
             else {
                 newBoardHandler.removeCallbacks(newBoardRunnable);
@@ -91,12 +92,13 @@ public class ScoreboardActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String intentStr = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
         highscoreData = parseHighScore(intentStr);
+        playedBoard = BoardManager.getNextBoard();
 
         showPersonalScore(highscoreData);
 
         if(GameSettings.UseFirebase()) {
             mFireStore = FirebaseFirestore.getInstance();
-            collectionPath = FIRESTORE_PREFIX + BoardManager.getNextBoard().getBoardString();
+            collectionPath = FIRESTORE_PREFIX + playedBoard.getBoardString();
             sessionReference = mFireStore.collection(collectionPath);
             firebaseAuth = FirebaseAuth.getInstance();
             highscoreData.setUserId(firebaseAuth.getUid());
@@ -116,15 +118,23 @@ public class ScoreboardActivity extends AppCompatActivity {
         // Fetch high score data from Firebase
         updateHighScores();
 
-        // Create board in background while in main menu
-        boardThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                BoardManager.generateBoard();
-            }
-        });
+        if(BoardManager.getBoardQueueSize() > 0) {
+           // Still have boards in the queue, no need to fetch anything from server
+            BoardManager.setNextBoard();
+        }
 
-        boardThread.start();
+        else {
+            // Create board in background while in main menu
+            boardThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    BoardManager.generateBoard();
+                }
+            });
+
+            boardThread.start();
+        }
+
         scoreBoardHandler.postDelayed(this::startGame, GameSettings.getScoreBoardDuration());
 
         if(UserSettings.getDarkModeEnabled() > 0) {
@@ -231,7 +241,7 @@ public class ScoreboardActivity extends AppCompatActivity {
     }
 
     private String getPerformanceText(HighscoreData data) {
-        float percentage = (float)data.getScore() / (float)BoardManager.getNextBoard().getMaxScore();
+        float percentage = (float)data.getScore() / (float)playedBoard.getMaxScore();
 
         return getResources().getString(R.string.scoreboard_info,
                 data.getUserName(), data.getScore(), percentage * 100, "%", data.getBestWord());
@@ -278,39 +288,10 @@ public class ScoreboardActivity extends AppCompatActivity {
                             scoreBoardAdapter.notifyItemInserted(highScores.size() - 1);
                             Log.d(TAG, "Fetched highscore data from firebase");
                         }
-
-                        //scoreBoardAdapter.notifyDataSetChanged();
                         checkRanking();
                     }
                 });
 
     }
 
-    // Sort and get highscore data from Firebase
-    /*public void updateHighScores() {
-        if(!GameSettings.UseFirebase())
-            return;
-        mFireStore.collection(collectionPath).orderBy("score", Query.Direction.DESCENDING)
-                .limit(GameSettings.getScoreBoardMaxCount())
-                .addSnapshotListener(new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
-                highScores.clear();
-                if (value != null) {
-                    for (DocumentSnapshot snapshot : value) {
-                        HighscoreData data = snapshot.toObject(HighscoreData.class);
-                        highScores.add(data);
-                        Log.d(TAG, "Fetched highscore from database");
-                    }
-
-                    // Not optimal, but other methods refuse to work properly
-                    scoreBoardAdapter.notifyDataSetChanged();
-                    checkRanking();
-
-                } else {
-                    Log.d(TAG, "Snapshot is null");
-                }
-            }
-        });
-    }*/
 }

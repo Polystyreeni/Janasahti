@@ -11,23 +11,36 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Random;
 
 // A class responsible for reading game boards from an exterior source
 public class BoardManager {
 
-    private static final String boardListUrl = "https://drive.google.com/uc?export=download&id=1OdjRb5bXxBlwwOnD6qzp_eh2o3Q4F23a";
     private static final String TAG = "BoardManager";
 
     private static String latestError = "";
     private static Board nextBoard = null;
-    private static final Random randGen = new Random();
     private static boolean shouldGenerateBoard = false;
     private static int previousBoard = -1;
+    private static final Random RANDGEN = new Random();
+    private static final Queue<Board> BOARD_QUEUE = new LinkedList<>();
+    private static final int BOARD_QUEUE_SIZE = 5;
 
     // Fetch a random game board from the provided XML file and set it as next board
     public static void generateBoard() {
+        String boardListUrl;
+        try {
+            boardListUrl = NetworkConfig.getUrl("boardList");
+        }
+        catch (InvalidUrlRequestException e) {
+            latestError = e.getMessage();
+            nextBoard = null;
+            return;
+        }
         try {
             XmlPullParser parser = Xml.newPullParser();
             URL listUrl = new URL(boardListUrl);
@@ -45,8 +58,9 @@ public class BoardManager {
             ArrayList<String> words = new ArrayList<>();
 
             int maxCount = 0;
-            int boardIndex = 0;
+            List<Integer> boardIndices = new ArrayList<Integer>();
             int boardCount = 0;
+            int boardCurrentIndex = 0;
 
             int event = parser.getEventType();
             while(event != XmlPullParser.END_DOCUMENT) {
@@ -55,16 +69,20 @@ public class BoardManager {
                     case XmlPullParser.START_TAG:
                         if(name.equals("count")) {
                             maxCount = Integer.parseInt(parser.nextText());
-                            boardIndex = randGen.nextInt(maxCount);
-                            if(boardIndex == previousBoard) {
-                                boardIndex = randGen.nextInt(maxCount);
+                            for(int i = 0; i < BOARD_QUEUE_SIZE; i++) {
+                                int boardIndex = RANDGEN.nextInt(maxCount);
+                                if(boardIndex == previousBoard) {
+                                    boardIndex = RANDGEN.nextInt(maxCount);
+                                }
+                                boardIndices.add(boardIndex);
                             }
 
-                            previousBoard = boardIndex;
+                            previousBoard = boardIndices.get(BOARD_QUEUE_SIZE - 1);
+                            Collections.sort(boardIndices, Integer::compare);
                         }
                         else if(name.equals("board")) {
-                            if(boardCount >= boardIndex) {
-                                Log.d(TAG, "Found board with index: " + boardIndex);
+                            if(boardCount == boardIndices.get(boardCurrentIndex)) {
+                                Log.d(TAG, "Found board with index:");
                             }
                             else {
                                 boardCount++;
@@ -73,24 +91,23 @@ public class BoardManager {
 
                         // Get tiles string for board
                         else if(name.equals("tiles")) {
-                            if(boardCount >= boardIndex) {
+                            if(boardCount == boardIndices.get(boardCurrentIndex)) {
                                 boardString = parser.nextText();
-                                Log.d(TAG, "Tiles: " + boardString);
                             }
                         }
 
                         // Get max score for board
                         else if(name.equals("score")) {
-                            if(boardCount >= boardIndex) {
+                            if(boardCount == boardIndices.get(boardCurrentIndex)) {
                                 score = Integer.parseInt(parser.nextText());
-                                Log.d(TAG, "Score: " + score);
                             }
                         }
 
                         // Add word to board
                         else if(name.equals("word")) {
-                            if(boardCount >= boardIndex) {
-                                words.add(parser.nextText());
+                            if(boardCount == boardIndices.get(boardCurrentIndex)) {
+                                String word = parser.nextText();
+                                words.add(word);
                             }
                         }
                         break;
@@ -98,8 +115,19 @@ public class BoardManager {
                     case XmlPullParser.END_TAG:
                         if(name.equals("board")) {
                             // Check if wanted board has been read entirely
-                            if(boardCount >= boardIndex)
-                                event = XmlPullParser.END_DOCUMENT;
+                            if(boardCount == boardIndices.get(boardCurrentIndex)) {
+                                Log.d(TAG, "Adding board with index: " + boardCount);
+
+                                // Append board to the queue
+                                Board board = new Board(boardString, score, new ArrayList<>(words));
+                                BOARD_QUEUE.add(board);
+                                boardCurrentIndex++;
+                                boardCount++;
+                                words.clear();
+                                Log.d(TAG, board.getWords().toString());
+                                if(boardCurrentIndex >= boardIndices.size())
+                                    event = XmlPullParser.END_DOCUMENT;
+                            }
                         }
                         break;
                 }
@@ -109,8 +137,7 @@ public class BoardManager {
                 }
             }
 
-            Board board = new Board(boardString, score, words);
-            setNextBoard(board);
+            setNextBoard();
         }
 
         catch (FileNotFoundException ex) {
@@ -126,8 +153,12 @@ public class BoardManager {
         }
     }
 
-    private static void setNextBoard(Board board) {
-        nextBoard = board;
+    public static void setNextBoard() {
+        nextBoard = BOARD_QUEUE.remove();
+    }
+
+    public static int getBoardQueueSize() {
+        return BOARD_QUEUE.size();
     }
 
     public static void clearActiveBoard() {
@@ -149,7 +180,7 @@ public class BoardManager {
     }
 
     public static void setRandomSeed(long seedNum) {
-        randGen.setSeed(seedNum);
+        RANDGEN.setSeed(seedNum);
     }
 
     private static String getBoardUrl(InputStream data) {
@@ -170,7 +201,7 @@ public class BoardManager {
             return "";
         }
 
-        int index = randGen.nextInt(links.size());
+        int index = RANDGEN.nextInt(links.size());
         Log.d(TAG, "Using gameBoard file: " + index);
         return links.get(index);
     }

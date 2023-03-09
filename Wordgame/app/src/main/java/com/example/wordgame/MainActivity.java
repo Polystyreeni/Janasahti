@@ -25,9 +25,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -249,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
         // Initialize firebase
         if(GameSettings.UseFirebase()) {
             mFireStore = FirebaseFirestore.getInstance();
-            collectionPath = FIRESTORE_PREFIX + BoardManager.getNextBoard().getBoardString();
+            collectionPath = FIRESTORE_PREFIX + activeBoard.getBoardString();
             firebaseAuth = FirebaseAuth.getInstance();
             fireBaseUid = firebaseAuth.getUid();
             getPreviousHighScore();
@@ -365,11 +363,9 @@ public class MainActivity extends AppCompatActivity {
         else if(randInt > 25 && randInt < 50) {
             return new StringBuilder(boardString).reverse().toString();
         }
-
         else if(randInt > 50 && randInt < 75) {
             return getComplementBoard(boardString).toString();
         }
-
         else {
             return getComplementBoard(boardString).reverse().toString();
         }
@@ -481,7 +477,23 @@ public class MainActivity extends AppCompatActivity {
         // Check if this word is valid
         ArrayList<String> words = activeBoard.getWords();
         boolean isValidWord = false;
-        for(String word : words) {
+
+        if(words.contains(formedWord) && !wordsFound.contains(formedWord)) {
+            TextView wordView = new TextView(getApplicationContext());
+            wordView.setTextColor(foundWordColor);
+
+            String wordText = getResources().getString(R.string.gameboard_found_word,
+                    GameSettings.getScoreForLength(formedWord.length()), formedWord);
+            wordView.setText(TextUtils.getSpannedText(wordText));
+            wordsLayout.addView(wordView);
+            currentScore += GameSettings.getScoreForLength(formedWord.length());
+            scoreText.setText(getResources().getString(R.string.gameboard_current_score, currentScore,
+                    activeBoard.getMaxScore()));
+            wordsFound.add(formedWord);
+            isValidWord = true;
+        }
+
+        /*for(String word : words) {
             if(word.equals(formedWord) && !wordsFound.contains(formedWord)) {
                 TextView wordView = new TextView(getApplicationContext());
                 wordView.setTextColor(foundWordColor);
@@ -497,7 +509,7 @@ public class MainActivity extends AppCompatActivity {
                 isValidWord = true;
                 break;
             }
-        }
+        }*/
 
         // Select drawable & sound to display
         Drawable drawable =  isValidWord ? AppCompatResources.getDrawable(getApplicationContext(), R.drawable.wordgame_tile_green)
@@ -506,7 +518,6 @@ public class MainActivity extends AppCompatActivity {
             drawable = AppCompatResources.getDrawable(getApplicationContext(), R.drawable.wordgame_tile_blue);
 
         int soundId = isValidWord ? soundIdAccept : soundIdDeny;
-        //soundPool.play(soundId, volume, volume, 1,0, 1f);
         audioHandler.playSound(soundId, audioHandler.getVolume(), audioHandler.getVolume(), 1, 0, 1f);
 
         for(TextView button : selectedButtons) {
@@ -587,6 +598,9 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout layout = popupView.findViewById(R.id.endScoreWordLayout);
         ArrayList<String> words = activeBoard.getWords();
         Collections.sort(words, this::sortWords);
+
+        Log.d(TAG, "Active board is: " + activeBoard.getBoardString());
+        Log.d(TAG, "Longest word is: " + words.get(0));
 
         // Group words by their length
         int previousLen = 0;

@@ -1,6 +1,5 @@
 package com.example.wordgame;
 
-import android.content.Context;
 import android.util.Log;
 
 import com.android.volley.Request;
@@ -12,29 +11,34 @@ import com.android.volley.toolbox.Volley;
 
 public class VersionManager {
     private static final String TAG = "VersionManager";
-
     private static final String version = "1.3.1";
-    private static final String versionLink = "https://drive.google.com/uc?export=download&id=1KusEpu5D6fUBFWZnDFUeA0A7FWGKiMDX";
 
     public static String getVersion() {
         return version;
     }
 
     public static void getLatestVersion(MenuActivity activity) {
-        RequestQueue queue = Volley.newRequestQueue(activity.getApplicationContext());
-        StringRequest request = new StringRequest(Request.Method.GET, versionLink, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                activity.onVersionRetrieved(response);
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                activity.onVersionRetrieved("");
-                Log.d(TAG, "Version file retrieving failed");
-            }
-        });
+        try {
+            String versionLink = NetworkConfig.getUrl("version");
+            RequestQueue queue = Volley.newRequestQueue(activity.getApplicationContext());
+            StringRequest request = new StringRequest(Request.Method.GET, versionLink, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    activity.onVersionRetrieved(response);
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    activity.onVersionRetrieved("");
+                    Log.d(TAG, "Version file retrieving failed");
+                }
+            });
 
-        queue.add(request);
+            queue.add(request);
+        }
+        catch (InvalidUrlRequestException e) {
+            activity.onVersionRetrieved("");
+            Log.d(TAG, "Version file retrieving failed");
+        }
     }
 }
