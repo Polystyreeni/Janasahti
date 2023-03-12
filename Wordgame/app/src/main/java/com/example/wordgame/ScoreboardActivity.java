@@ -137,6 +137,9 @@ public class ScoreboardActivity extends AppCompatActivity {
 
         scoreBoardHandler.postDelayed(this::startGame, GameSettings.getScoreBoardDuration());
 
+        // Update stats
+        updateUserStats();
+
         if(UserSettings.getDarkModeEnabled() > 0) {
             setDarkMode();
         }
@@ -172,6 +175,12 @@ public class ScoreboardActivity extends AppCompatActivity {
         if(boardThread == null || !boardThread.isAlive()) {
             startNewGame();
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        UserStatsManager.saveStats(getApplicationContext());
     }
 
     // Shows info from users previous game
@@ -238,6 +247,7 @@ public class ScoreboardActivity extends AppCompatActivity {
         text += getPerformanceText(highscoreData);
         scoreTextView.setText(TextUtils.getSpannedText(text));
         audioHandler.playSound(soundIdFirst, audioHandler.getVolume(), audioHandler.getVolume(), 1, 0, 1.0f);
+        UserStatsManager.Instance.setFirstPlaces(UserStatsManager.Instance.getFirstPlaces() + 1);
     }
 
     private String getPerformanceText(HighscoreData data) {
@@ -245,6 +255,26 @@ public class ScoreboardActivity extends AppCompatActivity {
 
         return getResources().getString(R.string.scoreboard_info,
                 data.getUserName(), data.getScore(), percentage * 100, "%", data.getBestWord());
+    }
+
+    private void updateUserStats() {
+        long totalScore = UserStatsManager.Instance.getScoreTotal();
+        int numberOfGames = UserStatsManager.Instance.getNumberOfGames();
+        int highestScore = UserStatsManager.Instance.getHighestScore();
+        double highestPercentage = UserStatsManager.Instance.getHighestPercentage();
+        String longestWord = UserStatsManager.Instance.getLongestWord();
+
+        UserStatsManager.Instance.setScoreTotal(totalScore + highscoreData.getScore());
+        UserStatsManager.Instance.setNumberOfGames(numberOfGames + 1);
+
+        if(highscoreData.getScore() > highestScore)
+            UserStatsManager.Instance.setHighestScore(highscoreData.getScore());
+        if(highscoreData.getBestWord().length() > longestWord.length())
+            UserStatsManager.Instance.setLongestWord(highscoreData.getBestWord());
+
+        float percentage = (float)highscoreData.getScore() / (float)playedBoard.getMaxScore();
+        if(percentage > highestPercentage)
+            UserStatsManager.Instance.setHighestPercentage(percentage);
     }
 
     private void setDarkMode() {

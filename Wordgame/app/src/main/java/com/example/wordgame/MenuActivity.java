@@ -167,6 +167,11 @@ public class MenuActivity extends AppCompatActivity {
         readSettingsFile();
         updateBackground();
         VersionManager.getLatestVersion(this);
+        Log.d(TAG, "Game Menu loaded");
+        if(UserStatsManager.Instance == null)
+            UserStatsManager.initialze();
+        else
+            UserStatsManager.saveStats(getApplicationContext());
 
         signInAnonymously();
     }
