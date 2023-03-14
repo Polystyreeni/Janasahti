@@ -4,7 +4,10 @@ import android.os.Build;
 import android.text.Html;
 import android.text.Spanned;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.WindowManager;
+
+import java.util.concurrent.TimeUnit;
 
 public class TextUtils {
 
@@ -27,5 +30,14 @@ public class TextUtils {
 
         // Totally 100% arbitrary equation that has not been tested at all
         return (int)(width * UserSettings.getTextScale());
+    }
+
+    public static String hrMinSecFromLong(long millis) {
+        Log.d(TAG, "Current millis: " + millis);
+        int days = (int)TimeUnit.MILLISECONDS.toDays(millis);
+        int hours = (int)TimeUnit.MILLISECONDS.toHours(millis);
+        int minutes = (int)TimeUnit.MILLISECONDS.toMinutes(millis);
+
+        return String.format("%d d, %d h, %d min", days, hours, minutes);
     }
 }

@@ -39,6 +39,7 @@ public class ScoreboardActivity extends AppCompatActivity {
     private ScoreboardAdapter scoreBoardAdapter;
     private boolean activityStopped = false;
     private Board playedBoard = null;
+    private boolean shouldWriteStats = true;
 
     // User values
     private String username;
@@ -180,7 +181,10 @@ public class ScoreboardActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        UserStatsManager.saveStats(getApplicationContext());
+        if (shouldWriteStats) {
+            Log.d(TAG, "Saving user stats");
+            UserStatsManager.saveStats(getApplicationContext());
+        }
     }
 
     // Shows info from users previous game
@@ -206,6 +210,7 @@ public class ScoreboardActivity extends AppCompatActivity {
         intent.putExtra(MainActivity.EXTRA_MESSAGE, username);
         startActivity(intent);
         boardThread = null;
+        shouldWriteStats = false;
         finish();
     }
 
@@ -232,12 +237,8 @@ public class ScoreboardActivity extends AppCompatActivity {
 
     private void checkRanking() {
         int maxscore = highscoreData.getScore();
-
-        Log.d(TAG, "Number of highscores: " + highScores.size());
-
         for(HighscoreData data : highScores) {
             if(data.getScore() > maxscore) {
-                Log.d(TAG, "Found someone with better score than you");
                 return;
             }
         }
@@ -248,6 +249,7 @@ public class ScoreboardActivity extends AppCompatActivity {
         scoreTextView.setText(TextUtils.getSpannedText(text));
         audioHandler.playSound(soundIdFirst, audioHandler.getVolume(), audioHandler.getVolume(), 1, 0, 1.0f);
         UserStatsManager.Instance.setFirstPlaces(UserStatsManager.Instance.getFirstPlaces() + 1);
+        UserStatsManager.userStatsSaved = false;
     }
 
     private String getPerformanceText(HighscoreData data) {
@@ -260,12 +262,14 @@ public class ScoreboardActivity extends AppCompatActivity {
     private void updateUserStats() {
         long totalScore = UserStatsManager.Instance.getScoreTotal();
         int numberOfGames = UserStatsManager.Instance.getNumberOfGames();
+        long totalGameTime = UserStatsManager.Instance.getTotalGameTime();
         int highestScore = UserStatsManager.Instance.getHighestScore();
         double highestPercentage = UserStatsManager.Instance.getHighestPercentage();
         String longestWord = UserStatsManager.Instance.getLongestWord();
 
         UserStatsManager.Instance.setScoreTotal(totalScore + highscoreData.getScore());
         UserStatsManager.Instance.setNumberOfGames(numberOfGames + 1);
+        UserStatsManager.Instance.setTotalGameTime(totalGameTime + GameSettings.getGameDuration());
 
         if(highscoreData.getScore() > highestScore)
             UserStatsManager.Instance.setHighestScore(highscoreData.getScore());
@@ -275,6 +279,8 @@ public class ScoreboardActivity extends AppCompatActivity {
         float percentage = (float)highscoreData.getScore() / (float)playedBoard.getMaxScore();
         if(percentage > highestPercentage)
             UserStatsManager.Instance.setHighestPercentage(percentage);
+
+        UserStatsManager.userStatsSaved = false;
     }
 
     private void setDarkMode() {

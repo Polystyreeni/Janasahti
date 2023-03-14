@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.util.Linkify;
@@ -30,11 +31,15 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.w3c.dom.Text;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,6 +61,8 @@ public class MenuActivity extends AppCompatActivity {
     // Menu state
     private Thread boardThread = null;
     private boolean versionChecked = false;
+    private String userName = "";
+    private PopupWindow currentPopup = null;
 
     // Firebase
     private FirebaseFirestore mFireStore;
@@ -93,6 +100,7 @@ public class MenuActivity extends AppCompatActivity {
         mainMenuBackground = findViewById(R.id.mainMenuBackView);
 
         Button settingsButton = findViewById(R.id.settingsButton);
+        Button userStatsButton = findViewById(R.id.userStatsButton);
         final TextView versionTextView = findViewById(R.id.versionText);
 
         mFireStore = FirebaseFirestore.getInstance();
@@ -117,47 +125,11 @@ public class MenuActivity extends AppCompatActivity {
             startGame();
         });
 
-        settingsButton.setOnClickListener(view -> {
-            // Initialize the popup-window to show all words and score
-            LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
-            View popupView = inflater.inflate(R.layout.game_settings_popup, null);
-
-            CheckBox darkBox = popupView.findViewById(R.id.settingCheckboxColor);
-            CheckBox oledBox = popupView.findViewById(R.id.settingCheckboxOled);
-            Slider textSizeSlider = popupView.findViewById(R.id.settingsTextSizeSlider);
-            Button returnButton = popupView.findViewById(R.id.settingsReturnButton);
-
-            darkBox.setChecked(UserSettings.getDarkModeEnabled() > 0);
-            oledBox.setChecked(UserSettings.getOledProtectionEnabled() > 0);
-            textSizeSlider.setValue(UserSettings.getTextScale());
-
-            darkBox.setOnCheckedChangeListener((compoundButton, b) -> {
-                int value = b ? 1 : 0;
-                UserSettings.setDarkModeEnabled(value);
-                updateBackground();
-            });
-
-            oledBox.setOnCheckedChangeListener((compoundButton, b) -> {
-                int value = b ? 1 : 0;
-                UserSettings.setOledProtectionEnabled(value);
-            });
-
-            textSizeSlider.addOnChangeListener((slider, value, fromUser) -> {
-                int intVal = Math.round(value);
-                UserSettings.setTextScale(intVal);
-            });
-
-            int width = LinearLayout.LayoutParams.WRAP_CONTENT;
-            int height = LinearLayout.LayoutParams.WRAP_CONTENT;
-            final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
-            popupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
-            popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
-
-            returnButton.setOnClickListener(view1 -> popupWindow.dismiss());
-        });
+        settingsButton.setOnClickListener(view -> createSettingsPopup());
+        userStatsButton.setOnClickListener(view -> openUserStatsWindow());
 
         // Set username to the stored profile name (if exists)
-        String userName = readUserProfile();
+        userName = readUserProfile();
         if (!userName.isEmpty()) {
             userNameField.setText(userName);
         }
@@ -168,8 +140,11 @@ public class MenuActivity extends AppCompatActivity {
         updateBackground();
         VersionManager.getLatestVersion(this);
         Log.d(TAG, "Game Menu loaded");
-        if(UserStatsManager.Instance == null)
+        if(UserStatsManager.Instance == null) {
             UserStatsManager.initialze();
+            UserStatsManager.loadStats(getApplicationContext());
+        }
+
         else
             UserStatsManager.saveStats(getApplicationContext());
 
@@ -188,6 +163,7 @@ public class MenuActivity extends AppCompatActivity {
 
         Log.d(TAG, "Main menu on resume");
         startButton.setClickable(true);
+        UserStatsManager.saveStats(getApplicationContext());
 
         // Create a new board when entering main menu
         if(BoardManager.getShouldGenerateBoard()) {
@@ -210,6 +186,17 @@ public class MenuActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        if(currentPopup != null) {
+            currentPopup.dismiss();
+            currentPopup = null;
+        }
+        else {
+            super.onBackPressed();
+        }
+    }
+
     private void updateBackground() {
         if(UserSettings.getDarkModeEnabled() > 0) {
             layout.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_gradient_dark));
@@ -224,18 +211,18 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private void startGame() {
-        String username = userNameField.getText().toString();
-        if(username.isEmpty()) {
-            username = "Nimetön";
+        userName = userNameField.getText().toString();
+        if(userName.isEmpty()) {
+            userName = "Nimetön";
         }
 
         // We're using the / sign for passing data, don't allow user to have it in their username
-        if(username.contains("/"))
-            username = username.replaceAll("/", " ");
+        if(userName.contains("/"))
+            userName = userName.replaceAll("/", " ");
 
         // Name can't be too long, will cause issues with scaling
-        if(username.length() > GameSettings.getUsernameMaxLength()) {
-            username = username.substring(0, GameSettings.getUsernameMaxLength());
+        if(userName.length() > GameSettings.getUsernameMaxLength()) {
+            userName = userName.substring(0, GameSettings.getUsernameMaxLength());
         }
 
         if(firebaseUser != null && GameSettings.UseFirebase()) {
@@ -243,18 +230,18 @@ public class MenuActivity extends AppCompatActivity {
             String document = firebaseUser.getUid();
 
             Map<String, Object> docData = new HashMap<>();
-            docData.put("userName", username);
+            docData.put("userName", userName);
             sessionReference.document(document).set(docData)
                     .addOnSuccessListener(aVoid -> Log.d(TAG, "Userprofile successfully written!"))
                     .addOnFailureListener(e -> Log.w(TAG, "Error writing Userprofile", e));
         }
 
-        createUserProfile(username);
+        createUserProfile(userName);
         writeSettingsFile();
 
         // Start game activity
         Intent intent = new Intent(MenuActivity.this, MainActivity.class);
-        intent.putExtra(MainActivity.EXTRA_MESSAGE, username);
+        intent.putExtra(MainActivity.EXTRA_MESSAGE, userName);
         BoardManager.setShouldGenerateBoard(false);
         startActivity(intent);
         boardThread = null;
@@ -370,6 +357,50 @@ public class MenuActivity extends AppCompatActivity {
         versionChecked = true;
     }
 
+    private void createSettingsPopup() {
+        // Initialize the popup-window to show all words and score
+        LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.game_settings_popup, null);
+
+        CheckBox darkBox = popupView.findViewById(R.id.settingCheckboxColor);
+        CheckBox oledBox = popupView.findViewById(R.id.settingCheckboxOled);
+        Slider textSizeSlider = popupView.findViewById(R.id.settingsTextSizeSlider);
+        Button returnButton = popupView.findViewById(R.id.settingsReturnButton);
+
+        darkBox.setChecked(UserSettings.getDarkModeEnabled() > 0);
+        oledBox.setChecked(UserSettings.getOledProtectionEnabled() > 0);
+        textSizeSlider.setValue(UserSettings.getTextScale());
+
+        darkBox.setOnCheckedChangeListener((compoundButton, b) -> {
+            int value = b ? 1 : 0;
+            UserSettings.setDarkModeEnabled(value);
+            updateBackground();
+        });
+
+        oledBox.setOnCheckedChangeListener((compoundButton, b) -> {
+            int value = b ? 1 : 0;
+            UserSettings.setOledProtectionEnabled(value);
+        });
+
+        textSizeSlider.addOnChangeListener((slider, value, fromUser) -> {
+            int intVal = Math.round(value);
+            UserSettings.setTextScale(intVal);
+        });
+
+        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
+        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
+        popupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
+        popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+
+        currentPopup = popupWindow;
+
+        returnButton.setOnClickListener(view1 -> {
+            popupWindow.dismiss();
+            currentPopup = null;
+        });
+    }
+
     private void showUpdatePopup(String latestVersion) {
         // Initialize the popup-window to show update info
         LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -388,9 +419,75 @@ public class MenuActivity extends AppCompatActivity {
         popupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
         popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
 
+        currentPopup = popupWindow;
+
         cancelButton.setOnClickListener(view -> {
             versionChecked = true;
+            currentPopup = null;
             popupWindow.dismiss();
+        });
+    }
+
+    private void openUserStatsWindow() {
+        // Initialize the popup-window to show user stats
+        LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.user_stats_popup, null);
+
+        TextView statsScoreTextHeader = popupView.findViewById(R.id.userStatsScoreTotalHeader);
+        TextView statsGamesTextHeader = popupView.findViewById(R.id.userStatsGamesPlayedHeader);
+        TextView statsTimeTextHeader = popupView.findViewById(R.id.userStatsGameTimeHeader);
+        TextView statsHighScoreTextHeader = popupView.findViewById(R.id.userStatsHighestScoreHeader);
+        TextView statsPercentageTextHeader = popupView.findViewById(R.id.userStatsHighestPercentageHeader);
+        TextView statsFirstTextHeader = popupView.findViewById(R.id.userStatsFirstPlacesHeader);
+        TextView statsLongestWordTextHeader = popupView.findViewById(R.id.userStatsLongestWordHeader);
+
+        TextView statsNameText = popupView.findViewById(R.id.userStatsName);
+        TextView statsScoreText = popupView.findViewById(R.id.userStatsScoreTotal);
+        TextView statsGamesText = popupView.findViewById(R.id.userStatsGamesPlayed);
+        TextView statsTimeText = popupView.findViewById(R.id.userStatsGameTime);
+        TextView statsHighScoreText = popupView.findViewById(R.id.userStatsHighestScore);
+        TextView statsPercentageText = popupView.findViewById(R.id.userStatsHighestPercentage);
+        TextView statsFirstText = popupView.findViewById(R.id.userStatsFirstPlaces);
+        TextView statsLongestWordText = popupView.findViewById(R.id.userStatsLongestWord);
+        Button returnButton = popupView.findViewById(R.id.userStatsReturnButton);
+
+        // Need to do this ugly list to handle dark mode text color change
+        ArrayList<TextView> textViews = new ArrayList<>(Arrays.asList(
+                statsNameText, statsScoreText, statsGamesText, statsHighScoreText,
+                statsPercentageText, statsFirstText, statsLongestWordText,
+                statsScoreTextHeader, statsGamesTextHeader, statsHighScoreTextHeader,
+                statsPercentageTextHeader, statsFirstTextHeader, statsLongestWordTextHeader,
+                statsTimeTextHeader, statsTimeText
+        ));
+
+        if(UserSettings.getDarkModeEnabled() > 0) {
+            popupView.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_gradient_dark));
+            for(TextView t : textViews) {
+                t.setTextColor(Color.WHITE);
+            }
+        }
+
+        statsNameText.setText(userName);
+        statsScoreText.setText(String.valueOf(UserStatsManager.Instance.getScoreTotal()));
+        statsGamesText.setText(String.valueOf(UserStatsManager.Instance.getNumberOfGames()));
+        statsTimeText.setText(TextUtils.hrMinSecFromLong(UserStatsManager.Instance.getTotalGameTime()));
+        statsHighScoreText.setText(String.valueOf(UserStatsManager.Instance.getHighestScore()));
+        statsPercentageText.setText(getResources().getString(R.string.user_stats_percentage,
+                String.format("%.2f", UserStatsManager.Instance.getHighestPercentage() * 100), " %"));
+        statsLongestWordText.setText(UserStatsManager.Instance.getLongestWord());
+        statsFirstText.setText(String.valueOf(UserStatsManager.Instance.getFirstPlaces()));
+
+        int width = LinearLayout.LayoutParams.MATCH_PARENT;
+        int height = LinearLayout.LayoutParams.MATCH_PARENT;
+        final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
+        popupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
+        popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+
+        currentPopup = popupWindow;
+
+        returnButton.setOnClickListener(view1 -> {
+            popupWindow.dismiss();
+            currentPopup = null;
         });
     }
 }

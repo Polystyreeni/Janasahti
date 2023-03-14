@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
     private String boardString;
     private Random random;
     private boolean gameStopped = false;
+    private boolean shouldWriteStats = false;
 
     // Sound
     private AudioHandler audioHandler;
@@ -276,6 +277,11 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, "Main Board OnStop()");
         gameStopped = true;
+
+        if(shouldWriteStats) {
+            Log.d(TAG, "Saving user stats");
+            UserStatsManager.saveStats(getApplicationContext());
+        }
     }
 
     @Override
@@ -493,24 +499,6 @@ public class MainActivity extends AppCompatActivity {
             isValidWord = true;
         }
 
-        /*for(String word : words) {
-            if(word.equals(formedWord) && !wordsFound.contains(formedWord)) {
-                TextView wordView = new TextView(getApplicationContext());
-                wordView.setTextColor(foundWordColor);
-
-                String wordText = getResources().getString(R.string.gameboard_found_word,
-                        GameSettings.getScoreForLength(formedWord.length()), formedWord);
-                wordView.setText(TextUtils.getSpannedText(wordText));
-                wordsLayout.addView(wordView);
-                currentScore += GameSettings.getScoreForLength(formedWord.length());
-                scoreText.setText(getResources().getString(R.string.gameboard_current_score, currentScore,
-                        activeBoard.getMaxScore()));
-                wordsFound.add(formedWord);
-                isValidWord = true;
-                break;
-            }
-        }*/
-
         // Select drawable & sound to display
         Drawable drawable =  isValidWord ? AppCompatResources.getDrawable(getApplicationContext(), R.drawable.wordgame_tile_green)
                 : AppCompatResources.getDrawable(getApplicationContext(), R.drawable.wordgame_tile_red);
@@ -722,12 +710,14 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(MainActivity.this, ScoreboardActivity.class);
         intent.putExtra(EXTRA_MESSAGE, roundData);
         startActivity(intent);
+        shouldWriteStats = false;
         finish();
     }
 
     // Return to main menu
     private void returnToMain() {
         BoardManager.clearActiveBoard();
+        shouldWriteStats = false;
         finish();
     }
 

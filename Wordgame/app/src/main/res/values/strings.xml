@@ -23,4 +23,12 @@
     <string name="gameboard_timer">%1$d:%2$02d</string>
     <string name="gameboard_current_score">%1$d / %2$d</string>
     <string name="gameboard_found_word"><![CDATA[<b>%1$d</b> %2$s]]></string>
+    <string name="user_stats_score_total">Pisteitä yhteensä:</string>
+    <string name="user_stats_games_played">Pelattuja pelejä:</string>
+    <string name="user_stats_game_time">Peliaika yhteensä:</string>
+    <string name="user_stats_highest_score">Paras pistemäärä:</string>
+    <string name="user_stats_first_places">&#128081;-lukumäärä:</string>
+    <string name="user_stats_highest_percentage">Paras löytöprosentti:</string>
+    <string name="user_stats_longest_word">Pisin sana:</string>
+    <string name="user_stats_percentage">%1$s %2$s</string>
 </resources>

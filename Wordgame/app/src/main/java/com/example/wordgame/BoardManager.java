@@ -116,15 +116,12 @@ public class BoardManager {
                         if(name.equals("board")) {
                             // Check if wanted board has been read entirely
                             if(boardCount == boardIndices.get(boardCurrentIndex)) {
-                                Log.d(TAG, "Adding board with index: " + boardCount);
-
                                 // Append board to the queue
                                 Board board = new Board(boardString, score, new ArrayList<>(words));
                                 BOARD_QUEUE.add(board);
                                 boardCurrentIndex++;
                                 boardCount++;
                                 words.clear();
-                                Log.d(TAG, board.getWords().toString());
                                 if(boardCurrentIndex >= boardIndices.size())
                                     event = XmlPullParser.END_DOCUMENT;
                             }

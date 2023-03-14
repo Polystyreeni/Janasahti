@@ -3,6 +3,7 @@ package com.example.wordgame;
 public class UserStats {
     private long scoreTotal;
     private int numberOfGames;
+    private long totalGameTime;
     private int highestScore;
     private int firstPlaces;
     private float highestPercentage;
@@ -11,6 +12,7 @@ public class UserStats {
     public UserStats() {
         this.scoreTotal = 0;
         this.numberOfGames = 0;
+        this.totalGameTime = 0;
         this.highestScore = 0;
         this.firstPlaces = 0;
         this.highestPercentage = 0;
@@ -23,6 +25,10 @@ public class UserStats {
 
     public int getNumberOfGames() {
         return this.numberOfGames;
+    }
+
+    public long getTotalGameTime() {
+        return this.totalGameTime;
     }
 
     public int getHighestScore() {
@@ -48,6 +54,7 @@ public class UserStats {
     public void setNumberOfGames(int numberOfGames) {
         this.numberOfGames = numberOfGames;
     }
+    public void setTotalGameTime(long gameTime) {this.totalGameTime = gameTime;}
 
     public void setHighestScore(int highestScore) {
         this.highestScore = highestScore;
