@@ -35,7 +35,9 @@ public class TextUtils {
     public static String hrMinSecFromLong(long millis) {
         Log.d(TAG, "Current millis: " + millis);
         int days = (int)TimeUnit.MILLISECONDS.toDays(millis);
+        millis -= TimeUnit.DAYS.toMillis(days);
         int hours = (int)TimeUnit.MILLISECONDS.toHours(millis);
+        millis -= TimeUnit.HOURS.toMillis(hours);
         int minutes = (int)TimeUnit.MILLISECONDS.toMinutes(millis);
 
         return String.format("%d d, %d h, %d min", days, hours, minutes);
