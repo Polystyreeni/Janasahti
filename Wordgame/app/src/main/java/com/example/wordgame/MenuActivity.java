@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -152,6 +153,16 @@ public class MenuActivity extends AppCompatActivity {
             UserStatsManager.saveStats(getApplicationContext());
 
         signInAnonymously();
+        layout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                // Do this with delay, because not working otherwise
+                if(UserSettings.getDarkModeEnabled() > 0) {
+                    settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
+                    userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
+                }
+            }
+        });
     }
 
     @Override
