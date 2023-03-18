@@ -280,6 +280,7 @@ public class ScoreboardActivity extends AppCompatActivity {
         if(percentage > highestPercentage)
             UserStatsManager.Instance.setHighestPercentage(percentage);
 
+        UserStatsManager.Instance.setAverageScore();
         UserStatsManager.userStatsSaved = false;
     }
 

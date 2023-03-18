@@ -436,6 +436,7 @@ public class MenuActivity extends AppCompatActivity {
         TextView statsScoreTextHeader = popupView.findViewById(R.id.userStatsScoreTotalHeader);
         TextView statsGamesTextHeader = popupView.findViewById(R.id.userStatsGamesPlayedHeader);
         TextView statsTimeTextHeader = popupView.findViewById(R.id.userStatsGameTimeHeader);
+        TextView statsAvgScoreTextHeader = popupView.findViewById(R.id.userStatsAvgScoreHeader);
         TextView statsHighScoreTextHeader = popupView.findViewById(R.id.userStatsHighestScoreHeader);
         TextView statsPercentageTextHeader = popupView.findViewById(R.id.userStatsHighestPercentageHeader);
         TextView statsFirstTextHeader = popupView.findViewById(R.id.userStatsFirstPlacesHeader);
@@ -445,6 +446,7 @@ public class MenuActivity extends AppCompatActivity {
         TextView statsScoreText = popupView.findViewById(R.id.userStatsScoreTotal);
         TextView statsGamesText = popupView.findViewById(R.id.userStatsGamesPlayed);
         TextView statsTimeText = popupView.findViewById(R.id.userStatsGameTime);
+        TextView statsAvgScoreText = popupView.findViewById(R.id.userStatsAvgScore);
         TextView statsHighScoreText = popupView.findViewById(R.id.userStatsHighestScore);
         TextView statsPercentageText = popupView.findViewById(R.id.userStatsHighestPercentage);
         TextView statsFirstText = popupView.findViewById(R.id.userStatsFirstPlaces);
@@ -457,7 +459,7 @@ public class MenuActivity extends AppCompatActivity {
                 statsPercentageText, statsFirstText, statsLongestWordText,
                 statsScoreTextHeader, statsGamesTextHeader, statsHighScoreTextHeader,
                 statsPercentageTextHeader, statsFirstTextHeader, statsLongestWordTextHeader,
-                statsTimeTextHeader, statsTimeText
+                statsTimeTextHeader, statsTimeText, statsAvgScoreTextHeader, statsAvgScoreText
         ));
 
         if(UserSettings.getDarkModeEnabled() > 0) {
@@ -472,6 +474,7 @@ public class MenuActivity extends AppCompatActivity {
         statsGamesText.setText(String.valueOf(UserStatsManager.Instance.getNumberOfGames()));
         statsTimeText.setText(TextUtils.hrMinSecFromLong(UserStatsManager.Instance.getTotalGameTime()));
         statsHighScoreText.setText(String.valueOf(UserStatsManager.Instance.getHighestScore()));
+        statsAvgScoreText.setText(String.valueOf(UserStatsManager.Instance.getAverageScore()));
         statsPercentageText.setText(getResources().getString(R.string.user_stats_percentage,
                 String.format("%.2f", UserStatsManager.Instance.getHighestPercentage() * 100), " %"));
         statsLongestWordText.setText(UserStatsManager.Instance.getLongestWord());

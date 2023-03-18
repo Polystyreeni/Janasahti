@@ -32,13 +32,14 @@ public class UserStatsManager {
             String settingsStr = bufferedReader.readLine();
             String[] settings = settingsStr.split("/");
 
-            Instance.setScoreTotal(Long.parseLong(settings[0]));
-            Instance.setNumberOfGames(Integer.parseInt(settings[1]));
-            Instance.setTotalGameTime(Integer.parseInt(settings[2]));
-            Instance.setHighestScore(Integer.parseInt(settings[3]));
-            Instance.setFirstPlaces(Integer.parseInt(settings[4]));
-            Instance.setHighestPercentage(Float.parseFloat(settings[5]));
-            Instance.setLongestWord(settings[6]);
+            Instance.setScoreTotal(Long.parseLong(getSetting(settings, 0)));
+            Instance.setNumberOfGames(Integer.parseInt(getSetting(settings, 1)));
+            Instance.setTotalGameTime(Integer.parseInt(getSetting(settings, 2)));
+            Instance.setHighestScore(Integer.parseInt(getSetting(settings, 3)));
+            Instance.setFirstPlaces(Integer.parseInt(getSetting(settings, 4)));
+            Instance.setHighestPercentage(Float.parseFloat(getSetting(settings, 5)));
+            Instance.setLongestWord(getSetting(settings, 6));
+            Instance.setAverageScore();
 
             userStatsSaved = true;
 
@@ -49,7 +50,7 @@ public class UserStatsManager {
             private int highestScore;
             private int firstPlaces;
             private double highestPercentage;
-             */
+            */
         }
 
         catch (Exception ex) {
@@ -71,7 +72,8 @@ public class UserStatsManager {
                     + "/" + String.valueOf(Instance.getHighestScore())
                     + "/" + String.valueOf(Instance.getFirstPlaces())
                     + "/" + String.valueOf(Instance.getHighestPercentage())
-                    + "/" + Instance.getLongestWord();
+                    + "/" + Instance.getLongestWord()
+                    + "/" + String.valueOf(Instance.getAverageScore());
 
             stream.write(settings.getBytes(StandardCharsets.UTF_8));
             stream.close();
@@ -81,6 +83,15 @@ public class UserStatsManager {
 
         catch (Exception ex) {
             ex.printStackTrace();
+        }
+    }
+
+    private static String getSetting(String[] settings, int index) {
+        try {
+            return settings[index];
+        }
+        catch (Exception e) {
+            return "0";
         }
     }
 }

@@ -5,6 +5,7 @@ public class UserStats {
     private int numberOfGames;
     private long totalGameTime;
     private int highestScore;
+    private int averageScore;
     private int firstPlaces;
     private float highestPercentage;
     private String longestWord;
@@ -14,6 +15,7 @@ public class UserStats {
         this.numberOfGames = 0;
         this.totalGameTime = 0;
         this.highestScore = 0;
+        this.averageScore = 0;
         this.firstPlaces = 0;
         this.highestPercentage = 0;
         this.longestWord = "-";
@@ -34,6 +36,8 @@ public class UserStats {
     public int getHighestScore() {
         return this.highestScore;
     }
+
+    public int getAverageScore() {return this.averageScore;}
 
     public int getFirstPlaces() {
         return this.firstPlaces;
@@ -59,6 +63,8 @@ public class UserStats {
     public void setHighestScore(int highestScore) {
         this.highestScore = highestScore;
     }
+
+    public void setAverageScore() {this.averageScore = (int)(scoreTotal / numberOfGames);}
 
     public void setFirstPlaces(int firstPlaces) {
         this.firstPlaces = firstPlaces;
