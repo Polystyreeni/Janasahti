@@ -18,6 +18,7 @@ Vaatimukset:
   * [Android Studio](https://developer.android.com/studio) (sovellus rakennettu versiolla Arctic Fox 2020.3.1)
   * Android 6.0 (API level 23) tai uudempi, fyysinen testilaite
   * Pelilauta- ja versiotiedot julkisesti ladattavissa URL-osoitteen kautta (esimerkiksi Drive, OneDrive jne.)
+    * Pelilautojen tekemiseen on oma ohjelma, jonka voi ladata [Täältä](https://github.com/Polystyreeni/JanasahtiBoardGenerator)
   * [Firebase](https://firebase.google.com/) käyttäjätili
   
 Ohjeet kokoamiseen alla:
@@ -52,6 +53,7 @@ Requirements:
   * [Android Studio](https://developer.android.com/studio) (app build using version Arctic Fox 2020.3.1)
   * Android 6.0 (API level 23) or newer supported physical device
   * Game board- and version files publically available via internet (can be hosted for example in Drive, OneDrive etc.)
+     * There is a program provided for generating boards, which can be downloaded [Here](https://github.com/Polystyreeni/JanasahtiBoardGenerator)
   * [Firebase](https://firebase.google.com/) account
   
 Instructions for compiling below:
