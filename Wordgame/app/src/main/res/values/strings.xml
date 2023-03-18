@@ -11,6 +11,7 @@
     <string name="settings_textSize">Kirjainkoko</string>
     <string name="settings_return">Palaa</string>
     <string name="error_version">Versiotiedon haku epäonnistui</string>
+    <string name="error_scoreboard">Pistetilastojen haku epäonnistui</string>
     <string name="new_version_header">Päivitys saatavilla</string>
     <string name="new_version_info">Sovelluksen käytettävyys on läpikäynyt kehitystä.
     Uuden version voi ladata alla olevasta linkistä:</string>

@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.util.Linkify;
@@ -57,6 +58,8 @@ public class MenuActivity extends AppCompatActivity {
     private ProgressBar boardLoadProgressBar;
     private ConstraintLayout layout;
     private View mainMenuBackground;
+    private Button settingsButton;
+    private Button userStatsButton;
 
     // Menu state
     private Thread boardThread = null;
@@ -99,8 +102,8 @@ public class MenuActivity extends AppCompatActivity {
         layout = findViewById(R.id.menuLayout);
         mainMenuBackground = findViewById(R.id.mainMenuBackView);
 
-        Button settingsButton = findViewById(R.id.settingsButton);
-        Button userStatsButton = findViewById(R.id.userStatsButton);
+        settingsButton = findViewById(R.id.settingsButton);
+        userStatsButton = findViewById(R.id.userStatsButton);
         final TextView versionTextView = findViewById(R.id.versionText);
 
         mFireStore = FirebaseFirestore.getInstance();
@@ -202,11 +205,15 @@ public class MenuActivity extends AppCompatActivity {
             layout.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_gradient_dark));
             mainMenuBackground.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.rounded_corner_black));
             userNameField.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.white));
+            settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
+            userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
         }
         else {
             layout.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_gradient));
             mainMenuBackground.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.rounded_corner_gold));
             userNameField.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.black));
+            settingsButton.getBackground().mutate().setColorFilter(R.attr.colorPrimary, PorterDuff.Mode.MULTIPLY);
+            userStatsButton.getBackground().mutate().setColorFilter(R.attr.colorPrimary, PorterDuff.Mode.MULTIPLY);
         }
     }
 
@@ -358,6 +365,11 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private void createSettingsPopup() {
+        if(currentPopup != null)
+            return;
+        if(UserSettings.getDarkModeEnabled() > 0)
+            settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
+
         // Initialize the popup-window to show all words and score
         LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = inflater.inflate(R.layout.game_settings_popup, null);
@@ -398,6 +410,8 @@ public class MenuActivity extends AppCompatActivity {
         returnButton.setOnClickListener(view1 -> {
             popupWindow.dismiss();
             currentPopup = null;
+            if(UserSettings.getDarkModeEnabled() > 0)
+                settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
         });
     }
 
@@ -429,6 +443,10 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private void openUserStatsWindow() {
+        if(currentPopup != null)
+            return;
+        if(UserSettings.getDarkModeEnabled() > 0)
+            userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
         // Initialize the popup-window to show user stats
         LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = inflater.inflate(R.layout.user_stats_popup, null);
@@ -491,6 +509,8 @@ public class MenuActivity extends AppCompatActivity {
         returnButton.setOnClickListener(view1 -> {
             popupWindow.dismiss();
             currentPopup = null;
+            if(UserSettings.getDarkModeEnabled() > 0)
+                userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
         });
     }
 }

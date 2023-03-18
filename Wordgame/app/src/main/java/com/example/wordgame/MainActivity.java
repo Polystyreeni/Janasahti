@@ -587,9 +587,6 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<String> words = activeBoard.getWords();
         Collections.sort(words, this::sortWords);
 
-        Log.d(TAG, "Active board is: " + activeBoard.getBoardString());
-        Log.d(TAG, "Longest word is: " + words.get(0));
-
         // Group words by their length
         int previousLen = 0;
         for(String word : activeBoard.getWords()) {
@@ -612,7 +609,6 @@ public class MainActivity extends AppCompatActivity {
                 public boolean onLongClick(View view) {
                     if(wordPopupWindow.getContentView().getAlpha() < 0.9)
                         return false;
-                    Log.d(TAG, "Show word: " + word);
                     int[] colorTiles = WordSolver.getTiles(word, boardString);
                     highLightButtons(colorTiles);
                     TextView textView = (TextView)view;
@@ -744,7 +740,6 @@ public class MainActivity extends AppCompatActivity {
                 HighscoreData previousData = documentSnapshot.toObject(HighscoreData.class);
                 if(previousData != null) {
                     previousHighScore = previousData.getScore();
-                    Log.d(TAG, "Previous high score data found, score: " + previousHighScore);
                 }
             }
         });

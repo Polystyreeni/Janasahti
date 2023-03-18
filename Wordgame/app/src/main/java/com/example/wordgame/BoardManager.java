@@ -81,10 +81,7 @@ public class BoardManager {
                             Collections.sort(boardIndices, Integer::compare);
                         }
                         else if(name.equals("board")) {
-                            if(boardCount == boardIndices.get(boardCurrentIndex)) {
-                                Log.d(TAG, "Found board with index:");
-                            }
-                            else {
+                            if(boardCount != boardIndices.get(boardCurrentIndex)) {
                                 boardCount++;
                             }
                         }
