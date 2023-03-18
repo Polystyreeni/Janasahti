@@ -11,6 +11,7 @@ import java.util.List;
 
 public class ScoreboardAdapter extends RecyclerView.Adapter<ScoreboardAdapter.ViewHolder> {
     private List<HighscoreData> localDataSet;
+    private int scoreMax;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView textView;
@@ -51,8 +52,9 @@ public class ScoreboardAdapter extends RecyclerView.Adapter<ScoreboardAdapter.Vi
 
         HighscoreData data = localDataSet.get(position);
 
-        String text = String.format("<b>%d</b>:   %s  -  %d pistettä &nbsp&nbsp<i>%s</i>", position + 1,
-                    data.getUserName(), data.getScore(), data.getBestWord());
+        String text = String.format("<b>%d</b>:   %s  -  %d pistettä &nbsp&nbsp<i>%s</i> &nbsp %.2f %s", position + 1,
+                    data.getUserName(), data.getScore(), data.getBestWord(),
+                ((float)data.getScore() / (float)scoreMax) * 100, "%");
 
         viewHolder.getTextView().setText(TextUtils.getSpannedText(text));
     }
@@ -62,4 +64,6 @@ public class ScoreboardAdapter extends RecyclerView.Adapter<ScoreboardAdapter.Vi
     public int getItemCount() {
         return localDataSet.size();
     }
+
+    public void setScoreMax(int scoreMax) {this.scoreMax = scoreMax;}
 }

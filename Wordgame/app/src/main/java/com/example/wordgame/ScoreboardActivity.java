@@ -114,6 +114,7 @@ public class ScoreboardActivity extends AppCompatActivity {
         // Set adapter for scoreboard
         scoreBoardAdapter = new ScoreboardAdapter(highScores);
         scoreBoard.setAdapter(scoreBoardAdapter);
+        scoreBoardAdapter.setScoreMax(playedBoard.getMaxScore());
         scoreBoard.setLayoutManager(new LinearLayoutManager(this));
 
         // Fetch high score data from Firebase
