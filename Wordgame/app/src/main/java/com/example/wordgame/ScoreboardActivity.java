@@ -9,11 +9,16 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -49,6 +54,7 @@ public class ScoreboardActivity extends AppCompatActivity {
     private TextView scoreTextView;
     private TextView bestPlayersTextView;
     private ConstraintLayout scoreBoardLayout;
+    private ProgressBar progressBar;
 
     // Audio
     private AudioHandler audioHandler;
@@ -66,9 +72,10 @@ public class ScoreboardActivity extends AppCompatActivity {
     Runnable newBoardRunnable = new Runnable() {
         @Override
         public void run() {
-            if(boardThread != null && boardThread.isAlive())
+            if(boardThread != null && boardThread.isAlive()) {
                 newBoardHandler.postDelayed(this, 500);
-            else {
+                progressBar.setVisibility(View.VISIBLE);
+            } else {
                 newBoardHandler.removeCallbacks(newBoardRunnable);
                 startNewGame();
             }
@@ -84,6 +91,8 @@ public class ScoreboardActivity extends AppCompatActivity {
         scoreTextView = findViewById(R.id.personalStatTextView);
         scoreBoardLayout = findViewById(R.id.scoreboardLayout);
         bestPlayersTextView = findViewById(R.id.scoreboardTitleTextView);
+        progressBar = findViewById(R.id.statsProgressBar);
+        progressBar.setVisibility(View.VISIBLE);
 
         // Audio handler
         audioHandler = new AudioHandler(this);
@@ -173,7 +182,6 @@ public class ScoreboardActivity extends AppCompatActivity {
         super.onRestart();
         activityStopped = false;
 
-        // Return to main menu if
         if(boardThread == null || !boardThread.isAlive()) {
             startNewGame();
         }
@@ -206,7 +214,6 @@ public class ScoreboardActivity extends AppCompatActivity {
             return;
         }
 
-        Log.d(TAG, "Starting new game");
         Intent intent = new Intent(ScoreboardActivity.this, MainActivity.class);
         intent.putExtra(MainActivity.EXTRA_MESSAGE, username);
         startActivity(intent);
@@ -307,8 +314,11 @@ public class ScoreboardActivity extends AppCompatActivity {
                 .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        progressBar.setVisibility(View.GONE);
                         if(!task.isSuccessful()) {
                             Log.d(TAG, "Error retrieving high score data!");
+                            Toast.makeText(ScoreboardActivity.this, R.string.error_scoreboard,
+                                    Toast.LENGTH_SHORT).show();
                             return;
                         }
                         highScores.clear();
@@ -324,7 +334,12 @@ public class ScoreboardActivity extends AppCompatActivity {
                             HighscoreData data = document.toObject(HighscoreData.class);
                             highScores.add(data);
                             scoreBoardAdapter.notifyItemInserted(highScores.size() - 1);
-                            Log.d(TAG, "Fetched highscore data from firebase");
+                        }
+
+                        // Don't check ranking if player is offline
+                        if(highScores.size() <= 1 && !isNetworkConnected()) {
+                            Log.d(TAG, "No network connection available!");
+                            return;
                         }
                         checkRanking();
                     }
@@ -332,4 +347,8 @@ public class ScoreboardActivity extends AppCompatActivity {
 
     }
 
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
+    }
 }
