@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
     private String boardString;
     private Random random;
     private boolean gameStopped = false;
-    private boolean shouldWriteStats = false;
+    private boolean shouldWriteStats = true;
 
     // Sound
     private AudioHandler audioHandler;
@@ -281,6 +281,17 @@ public class MainActivity extends AppCompatActivity {
         if(shouldWriteStats) {
             Log.d(TAG, "Saving user stats");
             UserStatsManager.saveStats(getApplicationContext());
+            shouldWriteStats = false;
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (shouldWriteStats) {
+            Log.d(TAG, "Saving user stats");
+            UserStatsManager.saveStats(getApplicationContext());
+            shouldWriteStats = false;
         }
     }
 
