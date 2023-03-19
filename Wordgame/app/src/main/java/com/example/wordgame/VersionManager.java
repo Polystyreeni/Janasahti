@@ -11,7 +11,7 @@ import com.android.volley.toolbox.Volley;
 
 public class VersionManager {
     private static final String TAG = "VersionManager";
-    private static final String version = "1.4.0";
+    private static final String version = "1.4.1";
 
     public static String getVersion() {
         return version;
