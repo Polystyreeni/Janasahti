@@ -45,6 +45,7 @@ public class ScoreboardActivity extends AppCompatActivity {
     private boolean activityStopped = false;
     private Board playedBoard = null;
     private boolean shouldWriteStats = true;
+    private long startTime;
 
     // User values
     private String username;
@@ -55,6 +56,7 @@ public class ScoreboardActivity extends AppCompatActivity {
     private TextView bestPlayersTextView;
     private ConstraintLayout scoreBoardLayout;
     private ProgressBar progressBar;
+    private TextView timerTextView;
 
     // Audio
     private AudioHandler audioHandler;
@@ -72,13 +74,25 @@ public class ScoreboardActivity extends AppCompatActivity {
     Runnable newBoardRunnable = new Runnable() {
         @Override
         public void run() {
-            if(boardThread != null && boardThread.isAlive()) {
-                newBoardHandler.postDelayed(this, 500);
-                progressBar.setVisibility(View.VISIBLE);
-            } else {
-                newBoardHandler.removeCallbacks(newBoardRunnable);
-                startNewGame();
+            long millis = System.currentTimeMillis() - startTime;
+            millis = GameSettings.getScoreBoardDuration() - millis;
+
+            if(millis < 0) {
+                if(boardThread != null && boardThread.isAlive()) {
+                    newBoardHandler.postDelayed(this, 500);
+                    progressBar.setVisibility(View.VISIBLE);
+                } else {
+                    newBoardHandler.removeCallbacks(newBoardRunnable);
+                    startNewGame();
+                }
+                return;
             }
+
+            int seconds = (int) (millis / 1000);
+            seconds = seconds % 60;
+
+            timerTextView.setText(getResources().getString(R.string.timer_next_round, seconds));
+            newBoardHandler.postDelayed(this, 500);
         }
     };
 
@@ -93,6 +107,8 @@ public class ScoreboardActivity extends AppCompatActivity {
         bestPlayersTextView = findViewById(R.id.scoreboardTitleTextView);
         progressBar = findViewById(R.id.statsProgressBar);
         progressBar.setVisibility(View.VISIBLE);
+        timerTextView = findViewById(R.id.scoreBoardTimer);
+        startTime = System.currentTimeMillis();
 
         // Audio handler
         audioHandler = new AudioHandler(this);
@@ -146,7 +162,7 @@ public class ScoreboardActivity extends AppCompatActivity {
             boardThread.start();
         }
 
-        scoreBoardHandler.postDelayed(this::startGame, GameSettings.getScoreBoardDuration());
+        scoreBoardHandler.postDelayed(this::startGame, 0);
 
         // Update stats
         updateUserStats();

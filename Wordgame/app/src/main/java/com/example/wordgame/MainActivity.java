@@ -142,12 +142,14 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             if (definitionThread != null && definitionThread.isAlive()) {
                 Log.d(TAG, "Skipping timer");
+                startTime = System.currentTimeMillis();
                 scoreBoardHandler.postDelayed(this, 500);
                 return;
             }
 
             if (wordDefinitionPopup != null) {
                 Log.d(TAG, "Skipping timer");
+                startTime = System.currentTimeMillis();
                 scoreBoardHandler.postDelayed(this, 500);
                 return;
             }
@@ -162,7 +164,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             int seconds = (int) (millis / 1000) % 60;
-            // TODO: Display seconds in some graphic
+            TextView scoreTimer = wordPopupWindow.getContentView().findViewById(R.id.endScoreTimer);
+            scoreTimer.setText(getResources().getString(R.string.timer_scoreboard, seconds));
             scoreBoardHandler.postDelayed(this, 500);
         }
     };
@@ -374,7 +377,6 @@ public class MainActivity extends AppCompatActivity {
             linearLayout.addView(horzLayout);
 
             int textSize = TextUtils.getTileTextSize(getWindowManager());
-
             for(int row = 0; row < boardWidth; row++) {
                 Button tile = new Button(this);
                 tile.setTextSize(textSize);
@@ -770,7 +772,7 @@ public class MainActivity extends AppCompatActivity {
                     definitionThread.interrupt();
                 wordDefinitionPopup.dismiss();
                 wordDefinitionPopup = null;
-                startTime = System.currentTimeMillis();
+                // startTime = System.currentTimeMillis();
             }
         });
 
