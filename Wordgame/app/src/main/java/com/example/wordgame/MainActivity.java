@@ -21,6 +21,7 @@ import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private ConstraintLayout baseLayout;
     private PopupWindow wordPopupWindow;
     private PopupWindow displayWordPopup;
+    private PopupWindow wordDefinitionPopup;
 
     // Visual attributes
     private int foundWordColor = Color.DKGRAY;
@@ -79,6 +81,9 @@ public class MainActivity extends AppCompatActivity {
     private Random random;
     private boolean gameStopped = false;
     private boolean shouldWriteStats = true;
+
+    // Definition Web Scraper
+    private Thread definitionThread = null;
 
     // Sound
     private AudioHandler audioHandler;
@@ -135,8 +140,30 @@ public class MainActivity extends AppCompatActivity {
     final Runnable scoreBoardRunnable = new Runnable() {
         @Override
         public void run() {
-            if(!gameStopped)
+            if (definitionThread != null && definitionThread.isAlive()) {
+                Log.d(TAG, "Skipping timer");
+                scoreBoardHandler.postDelayed(this, 500);
+                return;
+            }
+
+            if (wordDefinitionPopup != null) {
+                Log.d(TAG, "Skipping timer");
+                scoreBoardHandler.postDelayed(this, 500);
+                return;
+            }
+
+            long millis = System.currentTimeMillis() - startTime;
+            millis = GameSettings.getScoreBoardDuration() - millis;
+
+            // Game has ended
+            if(millis < 0 && !gameStopped) {
                 enterScoreboard();
+                return;
+            }
+
+            int seconds = (int) (millis / 1000) % 60;
+            // TODO: Display seconds in some graphic
+            scoreBoardHandler.postDelayed(this, 500);
         }
     };
 
@@ -591,7 +618,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Display user score and max score
         TextView scoreText = popupView.findViewById(R.id.endScoreTextView);
-        scoreText.setText(String.format("     %d / %d     ", currentScore, activeBoard.getMaxScore()));
+        scoreText.setText(String.format("%d / %d", currentScore, activeBoard.getMaxScore()));
 
         // Show all words
         LinearLayout layout = popupView.findViewById(R.id.endScoreWordLayout);
@@ -613,6 +640,7 @@ public class MainActivity extends AppCompatActivity {
             TextView view = new TextView(this);
             view.setAllCaps(true);
             view.setText(word);
+            view.setPadding(0, 1, 0, 1);
             int textColor = wordsFound.contains(word) ? getColor(R.color.dark_green) : Color.BLACK;
             view.setTextColor(textColor);
             view.setOnLongClickListener(new View.OnLongClickListener() {
@@ -661,9 +689,10 @@ public class MainActivity extends AppCompatActivity {
                     wordPopupWindow.getContentView().setAlpha(1);
                     resetAllButtons();
 
-                    if(displayWordPopup != null) {
+                    if(displayWordPopup != null)
                         displayWordPopup.dismiss();
-                    }
+                    if (definitionThread.isAlive())
+                        definitionThread.interrupt();
                     return true;
                 }
                 return false;
@@ -675,7 +704,9 @@ public class MainActivity extends AppCompatActivity {
         // Update leaderboards
         updateLeaderBoards();
 
-        scoreBoardHandler.postDelayed(scoreBoardRunnable, GameSettings.getScoreBoardDuration());
+        // scoreBoardHandler.postDelayed(scoreBoardRunnable, GameSettings.getScoreBoardDuration());
+        startTime = System.currentTimeMillis();
+        scoreBoardHandler.postDelayed(scoreBoardRunnable, 0);
     }
 
     // Create a popup showing the currently highlighted word
@@ -691,7 +722,69 @@ public class MainActivity extends AppCompatActivity {
         TextView textView = popupView.findViewById(R.id.displayWordTextView);
         textView.setText(word);
 
+        Button definitionButton = popupView.findViewById(R.id.definitionSearchButton);
+        definitionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "Definition button onClick()");
+                definitionThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        WordDefinitionService.getWordDefinition(word.toString());
+                    }
+                });
+                definitionThread.start();
+                createDefinitionPopup(word);
+            }
+        });
+
         displayWordPopup.showAtLocation(popupView, Gravity.BOTTOM, 0, 0);
+    }
+
+    private void createDefinitionPopup(CharSequence word) {
+        // Initialize the popup-window to show all words and score
+        LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.word_description_popup, null);
+
+        TextView definitionHeader = popupView.findViewById(R.id.wordDefinitionHeader);
+        ProgressBar progressBar = popupView.findViewById(R.id.wordDefinitionProgressBar);
+        TextView definitionExitButton = popupView.findViewById(R.id.wordDefinitionExitButton);
+
+        definitionHeader.setText(word);
+        progressBar.setVisibility(ProgressBar.VISIBLE);
+
+        int width = LinearLayout.LayoutParams.MATCH_PARENT;
+        int height = LinearLayout.LayoutParams.MATCH_PARENT;
+        wordDefinitionPopup = new PopupWindow(popupView, width, height, false);
+        wordDefinitionPopup.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
+        wordDefinitionPopup.setOutsideTouchable(false);
+
+        wordDefinitionPopup.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+
+        Log.d(TAG, "Created definition popup");
+
+        definitionExitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (definitionThread.isAlive())
+                    definitionThread.interrupt();
+                wordDefinitionPopup.dismiss();
+                wordDefinitionPopup = null;
+                startTime = System.currentTimeMillis();
+            }
+        });
+
+        try {
+            definitionThread.join();
+            wordDefinitionPopup.getContentView().findViewById(R.id.wordDefinitionProgressBar).setVisibility(ProgressBar.GONE);
+            TextView textView = wordDefinitionPopup.getContentView().findViewById(R.id.wordDefinitionText);
+            textView.setText(TextUtils.getSpannedText(WordDefinitionService.getDefinitionText()));
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            wordDefinitionPopup.dismiss();
+            wordDefinitionPopup = null;
+        }
     }
 
     // Sort words according to length
