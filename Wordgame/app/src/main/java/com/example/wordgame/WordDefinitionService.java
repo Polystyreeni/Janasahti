@@ -33,6 +33,9 @@ public class WordDefinitionService {
                 }
             }
 
+            stringBuilder.append(System.lineSeparator());
+            stringBuilder.append(String.format("Määritelmän tarjosi: %s", BASE_URL));
+
             definitionText = stringBuilder.toString();
             // return stringBuilder.toString();
         }

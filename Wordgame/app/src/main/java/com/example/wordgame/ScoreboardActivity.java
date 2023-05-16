@@ -50,6 +50,7 @@ public class ScoreboardActivity extends AppCompatActivity {
     // User values
     private String username;
     private HighscoreData highscoreData;
+    private int scoreImprovement = 0;
 
     // Ui components
     private TextView scoreTextView;
@@ -140,6 +141,8 @@ public class ScoreboardActivity extends AppCompatActivity {
         scoreBoardAdapter = new ScoreboardAdapter(highScores);
         scoreBoard.setAdapter(scoreBoardAdapter);
         scoreBoardAdapter.setScoreMax(playedBoard.getMaxScore());
+        scoreBoardAdapter.setScoreImprovement(scoreImprovement);
+        scoreBoardAdapter.setUserId(highscoreData.getUserId());
         scoreBoard.setLayoutManager(new LinearLayoutManager(this));
 
         // Fetch high score data from Firebase
@@ -179,10 +182,8 @@ public class ScoreboardActivity extends AppCompatActivity {
         // Cancel all runnables and threads
         if(newBoardHandler != null && newBoardRunnable != null)
             newBoardHandler.removeCallbacks(newBoardRunnable);
-
         if(boardThread != null)
             boardThread.interrupt();
-
         if(scoreBoardHandler != null)
             scoreBoardHandler.removeCallbacksAndMessages(null);
     }
@@ -255,6 +256,10 @@ public class ScoreboardActivity extends AppCompatActivity {
         username = dataArr[0];
         int score = Integer.parseInt(dataArr[1]);
         String bestWord = dataArr[2];
+
+        if (dataArr.length > 3) {
+            scoreImprovement = Integer.parseInt(dataArr[3]);
+        }
 
         return new HighscoreData(username, score, bestWord);
     }

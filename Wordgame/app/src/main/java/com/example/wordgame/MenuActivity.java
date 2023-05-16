@@ -118,7 +118,7 @@ public class MenuActivity extends AppCompatActivity {
         boardThread.start();
 
         startButton.setOnClickListener(view -> {
-            if(boardThread.isAlive()) {
+            if(boardThread != null && boardThread.isAlive()) {
                 Log.d(TAG, "Board thread alive, waiting...");
                 boardLoadProgressBar.setVisibility(View.VISIBLE);
                 boardLoadHandler.postDelayed(boardLoadRunnable, 0);
@@ -181,13 +181,12 @@ public class MenuActivity extends AppCompatActivity {
 
         // Create a new board when entering main menu
         if(BoardManager.getShouldGenerateBoard()) {
-                boardThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        BoardManager.generateBoard();
-                    }
-                });
+            if (BoardManager.getBoardQueueSize() > 0)
+                BoardManager.setNextBoard();
+            else {
+                boardThread = new Thread(BoardManager::generateBoard);
                 boardThread.start();
+            }
         }
     }
 

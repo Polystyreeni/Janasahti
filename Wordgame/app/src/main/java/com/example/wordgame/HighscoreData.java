@@ -10,6 +10,7 @@ public class HighscoreData {
     private String bestWord;
 
     public HighscoreData(String userName, int score, String bestWord) {
+        this.userId = "";
         this.userName = userName;
         this.score = score;
         this.bestWord = bestWord;

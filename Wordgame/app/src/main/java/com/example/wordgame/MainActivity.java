@@ -809,6 +809,10 @@ public class MainActivity extends AppCompatActivity {
         String roundData = username + "/" +
                 currentScore + "/" + findBestWord();
 
+        if (previousHighScore > 0 && currentScore > previousHighScore) {
+            roundData += "/" + String.valueOf(currentScore - previousHighScore);
+        }
+
         Intent intent = new Intent(MainActivity.this, ScoreboardActivity.class);
         intent.putExtra(EXTRA_MESSAGE, roundData);
         startActivity(intent);
