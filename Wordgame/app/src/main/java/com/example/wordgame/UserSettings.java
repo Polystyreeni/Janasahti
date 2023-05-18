@@ -12,6 +12,7 @@ public class UserSettings {
     private static int darkModeEnabled = 0;
     private static int oledProtectionEnabled = 0;
     private static int textScale = 14;
+    private static String MOTDId = "";
 
     public static List<MethodRunner> userSettings = new ArrayList<>();
 
@@ -37,15 +38,23 @@ public class UserSettings {
                 setTextScale(value);
             }
         });
+        userSettings.add(new MethodRunner() {
+            @Override
+            public void run(Object arg) {
+                if (arg != null)
+                    setMOTDId((String)arg);
+            }
+        });
     }
 
     public static int getDarkModeEnabled() { return darkModeEnabled; }
     public static int getOledProtectionEnabled() {return oledProtectionEnabled;}
     public static int getTextScale() {return textScale;}
+    public static String getMOTDId() {return MOTDId;}
 
     public static void setDarkModeEnabled(int value) {darkModeEnabled = value;}
     public static void setOledProtectionEnabled(int value) {oledProtectionEnabled = value;}
     public static void setTextScale(int value) {textScale = value;}
-
+    public static void setMOTDId(String value) {MOTDId = value;}
 
 }

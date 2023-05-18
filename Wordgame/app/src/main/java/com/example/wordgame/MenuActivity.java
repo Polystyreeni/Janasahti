@@ -67,6 +67,7 @@ public class MenuActivity extends AppCompatActivity {
     private boolean versionChecked = false;
     private String userName = "";
     private PopupWindow currentPopup = null;
+    private boolean MOTDReceived = false;
 
     // Firebase
     private FirebaseFirestore mFireStore;
@@ -78,7 +79,7 @@ public class MenuActivity extends AppCompatActivity {
     Runnable boardLoadRunnable = new Runnable() {
         @Override
         public void run() {
-            if(boardThread.isAlive() || !versionChecked) {
+            if(boardThread.isAlive() || !versionChecked || !MOTDReceived) {
                 boardLoadHandler.postDelayed(this, 500);
             }
 
@@ -87,6 +88,20 @@ public class MenuActivity extends AppCompatActivity {
 
                 startGame();
                 boardLoadHandler.removeCallbacks(boardLoadRunnable);
+            }
+        }
+    };
+
+    Handler messageHandler = new Handler();
+    Runnable messageRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!versionChecked) {
+                messageHandler.postDelayed(this, 500);
+            }
+            else {
+                createMessagePopup();
+                messageHandler.removeCallbacks(messageRunnable);
             }
         }
     };
@@ -143,6 +158,7 @@ public class MenuActivity extends AppCompatActivity {
         readSettingsFile();
         updateBackground();
         VersionManager.getLatestVersion(this);
+        MOTDManager.getLatestMessage(this);
         Log.d(TAG, "Game Menu loaded");
         if(UserStatsManager.Instance == null) {
             UserStatsManager.initialze();
@@ -304,7 +320,8 @@ public class MenuActivity extends AppCompatActivity {
 
             String settings = String.valueOf(UserSettings.getDarkModeEnabled())
                     + "/" + String.valueOf(UserSettings.getOledProtectionEnabled())
-                    + "/" + String.valueOf(UserSettings.getTextScale());
+                    + "/" + String.valueOf(UserSettings.getTextScale())
+                    + "/" + UserSettings.getMOTDId();
 
             stream.write(settings.getBytes(StandardCharsets.UTF_8));
             stream.close();
@@ -374,13 +391,25 @@ public class MenuActivity extends AppCompatActivity {
         versionChecked = true;
     }
 
+    public void onMOTDRetrieved(String id, String message) {
+        if (id.isEmpty())
+            return;
+
+        // User has already seen this message
+        if (UserSettings.getMOTDId().equals(id))
+             return;
+        UserSettings.setMOTDId(id);
+
+        // Display message popup
+        messageHandler.postDelayed(messageRunnable, 0);
+    }
+
     private void createSettingsPopup() {
         if(currentPopup != null)
             return;
         if(UserSettings.getDarkModeEnabled() > 0)
             settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
 
-        // Initialize the popup-window to show all words and score
         LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = inflater.inflate(R.layout.game_settings_popup, null);
 
@@ -422,6 +451,32 @@ public class MenuActivity extends AppCompatActivity {
             currentPopup = null;
             if(UserSettings.getDarkModeEnabled() > 0)
                 settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
+        });
+    }
+
+    private void createMessagePopup() {
+        LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.daily_message_popup, null);
+
+        TextView motdText = popupView.findViewById(R.id.motdTextView);
+        Button motdExitButton = popupView.findViewById(R.id.motdExitButton);
+
+        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
+        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
+        popupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
+        popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+
+        currentPopup = popupWindow;
+
+        motdText.setText(TextUtils.getSpannedText(MOTDManager.getMessageText()));
+        motdExitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MOTDReceived = true;
+                currentPopup = null;
+                popupWindow.dismiss();
+            }
         });
     }
 

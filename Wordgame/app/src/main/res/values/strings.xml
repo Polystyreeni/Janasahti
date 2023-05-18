@@ -36,4 +36,6 @@
     <string name="definition_search_button">Hae määritelmä</string>
     <string name="timer_scoreboard">Pistetilastoihin: %1$d</string>
     <string name="timer_next_round">Seuraava kierros: %1$d</string>
+    <string name="motd_header">Ilmoitusasiaa:</string>
+    <string name="motd_confirm">Okei</string>
 </resources>
