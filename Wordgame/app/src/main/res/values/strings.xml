@@ -4,7 +4,7 @@
     <string name="general_error">Virhe: </string>
     <string name="username_hint">Käyttäjänimi…</string>
     <string name="start_game">Aloita</string>
-    <string name="best_players">Parhaat pelaajat</string>
+    <string name="best_players">Parhaat pelaajat\n%1$s</string>
     <string name="settings_menu">Asetukset</string>
     <string name="settings_amoled">OLED-suoja</string>
     <string name="settings_colormode">Tumma Teema</string>
@@ -19,6 +19,9 @@
     <string name="new_version_link">https://github.com/Polystyreeni/Janasahti/releases</string>
     <string name="scoreboard_info"><![CDATA[
     <b>%1$s</b><br><b>%2$d</b> pistettä, %3$.2f %4$s<br>Pisin löydetty sana: <i>%5$s</i>
+    ]]></string>
+    <string name="scoreboard_info_rational"><![CDATA[
+    <b>%1$s</b><br><b>%2$d</b> sanaa, %3$.2f %4$s<br>Pisin löydetty sana: <i>%5$s</i>
     ]]></string>
     <string name="wordlist_word_len">%1$d kirjainta</string>
     <string name="gameboard_timer">%1$d:%2$02d</string>
@@ -38,4 +41,5 @@
     <string name="timer_next_round">Seuraava kierros: %1$d</string>
     <string name="motd_header">Ilmoitusasiaa:</string>
     <string name="motd_confirm">Okei</string>
+    <string name="gamemode_header">Pelimuoto</string>
 </resources>

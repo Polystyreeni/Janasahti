@@ -17,12 +17,15 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,6 +42,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,6 +65,9 @@ public class MenuActivity extends AppCompatActivity {
     private View mainMenuBackground;
     private Button settingsButton;
     private Button userStatsButton;
+    private Spinner gameModeSpinner;
+    private TextView gameModeDescription;
+    private ArrayAdapter<String> gameModeArrayAdaper;
 
     // Menu state
     private Thread boardThread = null;
@@ -117,10 +124,36 @@ public class MenuActivity extends AppCompatActivity {
         boardLoadProgressBar.setVisibility(View.GONE);
         layout = findViewById(R.id.menuLayout);
         mainMenuBackground = findViewById(R.id.mainMenuBackView);
+        gameModeSpinner = findViewById(R.id.gameModeSpinner);
+        gameModeDescription = findViewById(R.id.gameModeDescription);
+
+        // Initialize ArrayAdapter for game mode selection
+        String[] gameModeNames = new String[GameSettings.getGameModes().length];
+        for (int i = 0; i < gameModeNames.length; i++) {
+            gameModeNames[i] = GameSettings.getGameModeName(GameSettings.getGameModes()[i]);
+        }
+
+        gameModeArrayAdaper = new ArrayAdapter<>(this, R.layout.spinner_item, gameModeNames);
+        gameModeArrayAdaper.setDropDownViewResource(R.layout.spinner_item_dropdown);
+        gameModeSpinner.setAdapter(gameModeArrayAdaper);
 
         settingsButton = findViewById(R.id.settingsButton);
         userStatsButton = findViewById(R.id.userStatsButton);
         final TextView versionTextView = findViewById(R.id.versionText);
+
+        gameModeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String gameMode = GameSettings.getGameModes()[i];
+                UserSettings.setActiveGameMode(gameMode);
+                gameModeDescription.setText(GameSettings.getGameModeDescription(gameMode));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
         mFireStore = FirebaseFirestore.getInstance();
         sessionReference = mFireStore.collection(userCollectionName);
@@ -233,6 +266,7 @@ public class MenuActivity extends AppCompatActivity {
             userNameField.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.white));
             settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
             userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
+            gameModeDescription.setTextColor(Color.WHITE);
         }
         else {
             layout.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_gradient));
@@ -240,6 +274,7 @@ public class MenuActivity extends AppCompatActivity {
             userNameField.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.black));
             settingsButton.getBackground().mutate().setColorFilter(R.attr.colorPrimary, PorterDuff.Mode.MULTIPLY);
             userStatsButton.getBackground().mutate().setColorFilter(R.attr.colorPrimary, PorterDuff.Mode.MULTIPLY);
+            gameModeDescription.setTextColor(Color.BLACK);
         }
     }
 
@@ -321,7 +356,8 @@ public class MenuActivity extends AppCompatActivity {
             String settings = String.valueOf(UserSettings.getDarkModeEnabled())
                     + "/" + String.valueOf(UserSettings.getOledProtectionEnabled())
                     + "/" + String.valueOf(UserSettings.getTextScale())
-                    + "/" + UserSettings.getMOTDId();
+                    + "/" + UserSettings.getMOTDId()
+                    + "/" + UserSettings.getActiveGameMode();
 
             stream.write(settings.getBytes(StandardCharsets.UTF_8));
             stream.close();
@@ -347,6 +383,14 @@ public class MenuActivity extends AppCompatActivity {
 
             for(int i = 0; i < settings.length; i++) {
                 UserSettings.userSettings.get(i).run(settings[i]);
+            }
+
+            // Set game mode to saved value
+            for(int i = 0; i < GameSettings.getGameModes().length; i++)
+            {
+                if (UserSettings.getActiveGameMode().equals(GameSettings.getGameModes()[i])) {
+                    gameModeSpinner.setSelection(i);
+                }
             }
         }
 

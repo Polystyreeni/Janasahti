@@ -212,8 +212,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String boardString = activeBoard.getBoardString();
+        int maxScore = UserSettings.getActiveGameMode().equals("rational") ? activeBoard.getWords().size() : activeBoard.getMaxScore();
         scoreText.setText(getResources().getString(R.string.gameboard_current_score, currentScore,
-                activeBoard.getMaxScore()));
+                maxScore));
 
         audioHandler = new AudioHandler(this);
         soundIdTimer = audioHandler.addSoundToPool(R.raw.tick, 1);
@@ -533,8 +534,9 @@ public class MainActivity extends AppCompatActivity {
             wordView.setText(TextUtils.getSpannedText(wordText));
             wordsLayout.addView(wordView);
             currentScore += GameSettings.getScoreForLength(formedWord.length());
+            int maxScore = UserSettings.getActiveGameMode().equals("rational") ? activeBoard.getWords().size() : activeBoard.getMaxScore();
             scoreText.setText(getResources().getString(R.string.gameboard_current_score, currentScore,
-                    activeBoard.getMaxScore()));
+                    maxScore));
             wordsFound.add(formedWord);
             isValidWord = true;
         }
@@ -620,7 +622,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Display user score and max score
         TextView scoreText = popupView.findViewById(R.id.endScoreTextView);
-        scoreText.setText(String.format("%d / %d", currentScore, activeBoard.getMaxScore()));
+        int maxScore = UserSettings.getActiveGameMode().equals("rational") ? activeBoard.getWords().size() : activeBoard.getMaxScore();
+        scoreText.setText(getResources().getString(R.string.gameboard_current_score, currentScore,
+                maxScore));
+        // scoreText.setText(String.format("%d / %d", currentScore, activeBoard.getMaxScore()));
 
         // Show all words
         LinearLayout layout = popupView.findViewById(R.id.endScoreWordLayout);
@@ -807,7 +812,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String roundData = username + "/" +
-                currentScore + "/" + findBestWord();
+                currentScore + "/" + findBestWord()
+                + "/" + String.valueOf(wordsFound.size());
 
         if (previousHighScore > 0 && currentScore > previousHighScore) {
             roundData += "/" + String.valueOf(currentScore - previousHighScore);
@@ -849,7 +855,7 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 HighscoreData previousData = documentSnapshot.toObject(HighscoreData.class);
                 if(previousData != null) {
-                    previousHighScore = previousData.getScore();
+                    previousHighScore = getPreviousGameModeScore(previousData);
                 }
             }
         });
@@ -861,13 +867,30 @@ public class MainActivity extends AppCompatActivity {
             return;
 
         // Don't update score table, if previous score is greater
-        if(previousHighScore > currentScore) {
+        if (isScoreGreater())
             return;
-        }
+
         sessionReference = mFireStore.collection(collectionPath);
-        HighscoreData data = new HighscoreData(username, currentScore, findBestWord());
+        HighscoreData data = new HighscoreData(username, currentScore, findBestWord(), wordsFound.size());
         data.setUserId(fireBaseUid);
         sessionReference.document(fireBaseUid).set(data);
+        // Log.d(TAG, "Wrote highscore data to Firebase");
+    }
+
+    private int getPreviousGameModeScore(HighscoreData data) {
+        if (UserSettings.getActiveGameMode().equals("rational")) {
+            return data.getFoundWords();
+        }
+        return data.getScore();
+    }
+
+    private boolean isScoreGreater() {
+        if (UserSettings.getActiveGameMode().equals("rational")) {
+            return wordsFound.size() > currentScore;
+        }
+        else {
+            return previousHighScore > currentScore;
+        }
     }
 
     private void setDarkMode() {

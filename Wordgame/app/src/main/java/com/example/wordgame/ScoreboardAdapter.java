@@ -54,12 +54,19 @@ public class ScoreboardAdapter extends RecyclerView.Adapter<ScoreboardAdapter.Vi
 
         HighscoreData data = localDataSet.get(position);
 
-        String text = String.format("<b>%d</b>:   %s  -  %d pistettä &nbsp&nbsp<i>%s</i> &nbsp %.2f %s", position + 1,
+        String text;
+        if (UserSettings.getActiveGameMode().equals("rational")) {
+            text = String.format("<b>%d</b>:   %s  -  %d sanaa &nbsp&nbsp<i>%s</i> &nbsp %.2f %s", position + 1,
+                    data.getUserName(), data.getFoundWords(), data.getBestWord(),
+                    ((float)data.getScore() / (float)scoreMax) * 100, "%");
+        }
+        else {
+            text = String.format("<b>%d</b>:   %s  -  %d pistettä &nbsp&nbsp<i>%s</i> &nbsp %.2f %s", position + 1,
                     data.getUserName(), data.getScore(), data.getBestWord(),
-                ((float)data.getScore() / (float)scoreMax) * 100, "%");
-
-        if (scoreImprovement > 0 && userId.equals(data.getUserId()))
-            text += String.format("&nbsp&nbsp &#11014 %d", scoreImprovement);
+                    ((float)data.getScore() / (float)scoreMax) * 100, "%");
+            if (scoreImprovement > 0 && userId.equals(data.getUserId()))
+                text += String.format("&nbsp&nbsp &#11014 %d", scoreImprovement);
+        }
 
         viewHolder.getTextView().setText(TextUtils.getSpannedText(text));
     }
