@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -45,16 +46,19 @@ public class ScoreboardActivity extends AppCompatActivity {
     private boolean activityStopped = false;
     private Board playedBoard = null;
     private boolean shouldWriteStats = true;
+    private long startTime;
 
     // User values
     private String username;
     private HighscoreData highscoreData;
+    private int scoreImprovement = 0;
 
     // Ui components
     private TextView scoreTextView;
     private TextView bestPlayersTextView;
     private ConstraintLayout scoreBoardLayout;
     private ProgressBar progressBar;
+    private TextView timerTextView;
 
     // Audio
     private AudioHandler audioHandler;
@@ -72,13 +76,25 @@ public class ScoreboardActivity extends AppCompatActivity {
     Runnable newBoardRunnable = new Runnable() {
         @Override
         public void run() {
-            if(boardThread != null && boardThread.isAlive()) {
-                newBoardHandler.postDelayed(this, 500);
-                progressBar.setVisibility(View.VISIBLE);
-            } else {
-                newBoardHandler.removeCallbacks(newBoardRunnable);
-                startNewGame();
+            long millis = System.currentTimeMillis() - startTime;
+            millis = GameSettings.getScoreBoardDuration() - millis;
+
+            if(millis < 0) {
+                if(boardThread != null && boardThread.isAlive()) {
+                    newBoardHandler.postDelayed(this, 500);
+                    progressBar.setVisibility(View.VISIBLE);
+                } else {
+                    newBoardHandler.removeCallbacks(newBoardRunnable);
+                    startNewGame();
+                }
+                return;
             }
+
+            int seconds = (int) (millis / 1000);
+            seconds = seconds % 60;
+
+            timerTextView.setText(getResources().getString(R.string.timer_next_round, seconds));
+            newBoardHandler.postDelayed(this, 500);
         }
     };
 
@@ -93,6 +109,11 @@ public class ScoreboardActivity extends AppCompatActivity {
         bestPlayersTextView = findViewById(R.id.scoreboardTitleTextView);
         progressBar = findViewById(R.id.statsProgressBar);
         progressBar.setVisibility(View.VISIBLE);
+        timerTextView = findViewById(R.id.scoreBoardTimer);
+        startTime = System.currentTimeMillis();
+
+        bestPlayersTextView.setText(getResources().getString(R.string.best_players,
+                GameSettings.getGameModeName(UserSettings.getActiveGameMode())));
 
         // Audio handler
         audioHandler = new AudioHandler(this);
@@ -123,7 +144,10 @@ public class ScoreboardActivity extends AppCompatActivity {
         // Set adapter for scoreboard
         scoreBoardAdapter = new ScoreboardAdapter(highScores);
         scoreBoard.setAdapter(scoreBoardAdapter);
-        scoreBoardAdapter.setScoreMax(playedBoard.getMaxScore());
+        int scoreMax = UserSettings.getActiveGameMode().equals("rational") ? playedBoard.getWords().size() : playedBoard.getMaxScore();
+        scoreBoardAdapter.setScoreMax(scoreMax);
+        scoreBoardAdapter.setScoreImprovement(scoreImprovement);
+        scoreBoardAdapter.setUserId(highscoreData.getUserId());
         scoreBoard.setLayoutManager(new LinearLayoutManager(this));
 
         // Fetch high score data from Firebase
@@ -146,7 +170,7 @@ public class ScoreboardActivity extends AppCompatActivity {
             boardThread.start();
         }
 
-        scoreBoardHandler.postDelayed(this::startGame, GameSettings.getScoreBoardDuration());
+        scoreBoardHandler.postDelayed(this::startGame, 0);
 
         // Update stats
         updateUserStats();
@@ -160,13 +184,11 @@ public class ScoreboardActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        // Cancel all runnables and threads
+        // Cancel all runnable and threads
         if(newBoardHandler != null && newBoardRunnable != null)
             newBoardHandler.removeCallbacks(newBoardRunnable);
-
         if(boardThread != null)
             boardThread.interrupt();
-
         if(scoreBoardHandler != null)
             scoreBoardHandler.removeCallbacksAndMessages(null);
     }
@@ -239,8 +261,13 @@ public class ScoreboardActivity extends AppCompatActivity {
         username = dataArr[0];
         int score = Integer.parseInt(dataArr[1]);
         String bestWord = dataArr[2];
+        int foundWords = Integer.parseInt(dataArr[3]);
 
-        return new HighscoreData(username, score, bestWord);
+        if (dataArr.length > 4) {
+            scoreImprovement = Integer.parseInt(dataArr[4]);
+        }
+
+        return new HighscoreData(username, score, bestWord, foundWords);
     }
 
     private void checkRanking() {
@@ -261,10 +288,17 @@ public class ScoreboardActivity extends AppCompatActivity {
     }
 
     private String getPerformanceText(HighscoreData data) {
-        float percentage = (float)data.getScore() / (float)playedBoard.getMaxScore();
+        if (UserSettings.getActiveGameMode().equals("rational")) {
+            float percentage = (float)data.getFoundWords() / (float)playedBoard.getWords().size();
+            return getResources().getString(R.string.scoreboard_info_rational,
+                    data.getUserName(), data.getFoundWords(), percentage * 100, "%", data.getBestWord());
+        }
 
-        return getResources().getString(R.string.scoreboard_info,
-                data.getUserName(), data.getScore(), percentage * 100, "%", data.getBestWord());
+        else {
+            float percentage = (float)data.getScore() / (float)playedBoard.getMaxScore();
+            return getResources().getString(R.string.scoreboard_info,
+                    data.getUserName(), data.getScore(), percentage * 100, "%", data.getBestWord());
+        }
     }
 
     private void updateUserStats() {
@@ -302,14 +336,24 @@ public class ScoreboardActivity extends AppCompatActivity {
         RecyclerView scoreRecyclerView = findViewById(R.id.scoreRecyclerView);
         scoreRecyclerView.setBackground(ContextCompat.getDrawable(getApplicationContext(),
                 R.drawable.background_gradient_dark));
+        timerTextView.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.rounded_corner_black));
+        timerTextView.setTextColor(Color.WHITE);
     }
 
     public void updateHighScores() {
         if(!GameSettings.UseFirebase())
             return;
 
+        String field = "score";
+
+        // Rational game mode -> sort by number of words found
+        if (UserSettings.getActiveGameMode().equals("rational"))
+        {
+            field = "foundWords";
+        }
+
         // Sort and get data from Firebase
-        mFireStore.collection(collectionPath).orderBy("score", Query.Direction.DESCENDING)
+        mFireStore.collection(collectionPath).orderBy(field, Query.Direction.DESCENDING)
                 .limit(GameSettings.getScoreBoardMaxCount())
                 .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -325,6 +369,8 @@ public class ScoreboardActivity extends AppCompatActivity {
 
                         QuerySnapshot snapshot = task.getResult();
                         List<DocumentSnapshot> documents = snapshot.getDocuments();
+
+                        Log.d(TAG, "Found documents: " + documents.size());
 
                         for(DocumentSnapshot document : documents) {
                             if(!document.exists()) {

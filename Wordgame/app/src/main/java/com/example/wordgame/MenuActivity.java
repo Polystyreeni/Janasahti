@@ -17,12 +17,15 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,6 +42,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,12 +65,16 @@ public class MenuActivity extends AppCompatActivity {
     private View mainMenuBackground;
     private Button settingsButton;
     private Button userStatsButton;
+    private Spinner gameModeSpinner;
+    private TextView gameModeDescription;
+    private ArrayAdapter<String> gameModeArrayAdaper;
 
     // Menu state
     private Thread boardThread = null;
     private boolean versionChecked = false;
     private String userName = "";
     private PopupWindow currentPopup = null;
+    private boolean MOTDReceived = false;
 
     // Firebase
     private FirebaseFirestore mFireStore;
@@ -78,7 +86,7 @@ public class MenuActivity extends AppCompatActivity {
     Runnable boardLoadRunnable = new Runnable() {
         @Override
         public void run() {
-            if(boardThread.isAlive() || !versionChecked) {
+            if(boardThread.isAlive() || !versionChecked || !MOTDReceived) {
                 boardLoadHandler.postDelayed(this, 500);
             }
 
@@ -87,6 +95,20 @@ public class MenuActivity extends AppCompatActivity {
 
                 startGame();
                 boardLoadHandler.removeCallbacks(boardLoadRunnable);
+            }
+        }
+    };
+
+    Handler messageHandler = new Handler();
+    Runnable messageRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!versionChecked) {
+                messageHandler.postDelayed(this, 500);
+            }
+            else {
+                createMessagePopup();
+                messageHandler.removeCallbacks(messageRunnable);
             }
         }
     };
@@ -102,10 +124,36 @@ public class MenuActivity extends AppCompatActivity {
         boardLoadProgressBar.setVisibility(View.GONE);
         layout = findViewById(R.id.menuLayout);
         mainMenuBackground = findViewById(R.id.mainMenuBackView);
+        gameModeSpinner = findViewById(R.id.gameModeSpinner);
+        gameModeDescription = findViewById(R.id.gameModeDescription);
+
+        // Initialize ArrayAdapter for game mode selection
+        String[] gameModeNames = new String[GameSettings.getGameModes().length];
+        for (int i = 0; i < gameModeNames.length; i++) {
+            gameModeNames[i] = GameSettings.getGameModeName(GameSettings.getGameModes()[i]);
+        }
+
+        gameModeArrayAdaper = new ArrayAdapter<>(this, R.layout.spinner_item, gameModeNames);
+        gameModeArrayAdaper.setDropDownViewResource(R.layout.spinner_item_dropdown);
+        gameModeSpinner.setAdapter(gameModeArrayAdaper);
 
         settingsButton = findViewById(R.id.settingsButton);
         userStatsButton = findViewById(R.id.userStatsButton);
         final TextView versionTextView = findViewById(R.id.versionText);
+
+        gameModeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String gameMode = GameSettings.getGameModes()[i];
+                UserSettings.setActiveGameMode(gameMode);
+                gameModeDescription.setText(GameSettings.getGameModeDescription(gameMode));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
         mFireStore = FirebaseFirestore.getInstance();
         sessionReference = mFireStore.collection(userCollectionName);
@@ -118,7 +166,7 @@ public class MenuActivity extends AppCompatActivity {
         boardThread.start();
 
         startButton.setOnClickListener(view -> {
-            if(boardThread.isAlive()) {
+            if(boardThread != null && boardThread.isAlive()) {
                 Log.d(TAG, "Board thread alive, waiting...");
                 boardLoadProgressBar.setVisibility(View.VISIBLE);
                 boardLoadHandler.postDelayed(boardLoadRunnable, 0);
@@ -143,6 +191,7 @@ public class MenuActivity extends AppCompatActivity {
         readSettingsFile();
         updateBackground();
         VersionManager.getLatestVersion(this);
+        MOTDManager.getLatestMessage(this);
         Log.d(TAG, "Game Menu loaded");
         if(UserStatsManager.Instance == null) {
             UserStatsManager.initialze();
@@ -181,13 +230,12 @@ public class MenuActivity extends AppCompatActivity {
 
         // Create a new board when entering main menu
         if(BoardManager.getShouldGenerateBoard()) {
-                boardThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        BoardManager.generateBoard();
-                    }
-                });
+            if (BoardManager.getBoardQueueSize() > 0)
+                BoardManager.setNextBoard();
+            else {
+                boardThread = new Thread(BoardManager::generateBoard);
                 boardThread.start();
+            }
         }
     }
 
@@ -218,6 +266,7 @@ public class MenuActivity extends AppCompatActivity {
             userNameField.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.white));
             settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
             userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
+            gameModeDescription.setTextColor(Color.WHITE);
         }
         else {
             layout.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_gradient));
@@ -225,6 +274,7 @@ public class MenuActivity extends AppCompatActivity {
             userNameField.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.black));
             settingsButton.getBackground().mutate().setColorFilter(R.attr.colorPrimary, PorterDuff.Mode.MULTIPLY);
             userStatsButton.getBackground().mutate().setColorFilter(R.attr.colorPrimary, PorterDuff.Mode.MULTIPLY);
+            gameModeDescription.setTextColor(Color.BLACK);
         }
     }
 
@@ -305,7 +355,9 @@ public class MenuActivity extends AppCompatActivity {
 
             String settings = String.valueOf(UserSettings.getDarkModeEnabled())
                     + "/" + String.valueOf(UserSettings.getOledProtectionEnabled())
-                    + "/" + String.valueOf(UserSettings.getTextScale());
+                    + "/" + String.valueOf(UserSettings.getTextScale())
+                    + "/" + UserSettings.getMOTDId()
+                    + "/" + UserSettings.getActiveGameMode();
 
             stream.write(settings.getBytes(StandardCharsets.UTF_8));
             stream.close();
@@ -331,6 +383,14 @@ public class MenuActivity extends AppCompatActivity {
 
             for(int i = 0; i < settings.length; i++) {
                 UserSettings.userSettings.get(i).run(settings[i]);
+            }
+
+            // Set game mode to saved value
+            for(int i = 0; i < GameSettings.getGameModes().length; i++)
+            {
+                if (UserSettings.getActiveGameMode().equals(GameSettings.getGameModes()[i])) {
+                    gameModeSpinner.setSelection(i);
+                }
             }
         }
 
@@ -375,13 +435,25 @@ public class MenuActivity extends AppCompatActivity {
         versionChecked = true;
     }
 
+    public void onMOTDRetrieved(String id, String message) {
+        if (id.isEmpty())
+            return;
+
+        // User has already seen this message
+        if (UserSettings.getMOTDId().equals(id))
+             return;
+        UserSettings.setMOTDId(id);
+
+        // Display message popup
+        messageHandler.postDelayed(messageRunnable, 0);
+    }
+
     private void createSettingsPopup() {
         if(currentPopup != null)
             return;
         if(UserSettings.getDarkModeEnabled() > 0)
             settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
 
-        // Initialize the popup-window to show all words and score
         LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = inflater.inflate(R.layout.game_settings_popup, null);
 
@@ -423,6 +495,32 @@ public class MenuActivity extends AppCompatActivity {
             currentPopup = null;
             if(UserSettings.getDarkModeEnabled() > 0)
                 settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
+        });
+    }
+
+    private void createMessagePopup() {
+        LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.daily_message_popup, null);
+
+        TextView motdText = popupView.findViewById(R.id.motdTextView);
+        Button motdExitButton = popupView.findViewById(R.id.motdExitButton);
+
+        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
+        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
+        popupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
+        popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+
+        currentPopup = popupWindow;
+
+        motdText.setText(TextUtils.getSpannedText(MOTDManager.getMessageText()));
+        motdExitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MOTDReceived = true;
+                currentPopup = null;
+                popupWindow.dismiss();
+            }
         });
     }
 

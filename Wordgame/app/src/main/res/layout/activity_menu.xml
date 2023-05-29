@@ -16,6 +16,7 @@
         android:layout_marginTop="90dp"
         android:layout_marginEnd="30dp"
         android:layout_marginBottom="80dp"
+        android:foregroundGravity="center"
         android:background="@drawable/rounded_corner_gold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -47,7 +48,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="60dp"
-        android:layout_marginTop="250dp"
+        android:layout_marginTop="220dp"
         android:layout_marginEnd="60dp"
         android:ems="10"
         android:hint="@string/username_hint"
@@ -60,9 +61,11 @@
         android:id="@+id/startGameButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="158dp"
+        android:layout_marginStart="100dp"
         android:layout_marginTop="22dp"
-        android:layout_marginEnd="159dp"
+        android:layout_marginEnd="100dp"
+        android:gravity="center"
+        android:minWidth="120dp"
         android:text="@string/start_game"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -109,6 +112,37 @@
         android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/titleTextView" />
+
+    <Spinner
+        android:id="@+id/gameModeSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:layout_marginStart="100dp"
+        android:layout_marginEnd="100dp"
+        android:minHeight="30dp"
+        android:prompt="@string/gamemode_header"
+        android:spinnerMode="dropdown"
+        android:textAlignment="center"
+        android:background="@color/pico_void"
+        app:layout_constraintBottom_toTopOf="@+id/gameModeDescription"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/gameModeDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="35dp"
+        android:layout_marginEnd="35dp"
+        android:textAlignment="center"
+        android:text="Kaikki sanat ovat saman arvoisia, pistemäärä perustuu löydettyjen sanojen lukumäärään"
+        android:layout_marginBottom="10dp"
+        android:textColor="@color/black"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintBottom_toBottomOf="@+id/mainMenuBackView"
+        app:layout_constraintStart_toStartOf="parent"/>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -51,10 +51,14 @@ public class NetworkConfig {
     // REPLACE THIS URL WITH YOUR OWN
     private static final String BOARD_LIST_URL = "DUMMY-URL-REPLACE-ME";
 
+    // REPLACE THIS URL WITH YOUR OWN
+    private static final String MESSAGE_URL = "DUMMY-URL-REPLACE-ME";
+
     private static final HashMap<String, String> URLCONFIG = new HashMap<String, String>() {
         {
             put("version", VERSION_URL);
             put("boardList", BOARD_LIST_URL);
+            put("message", MESSAGE_URL);
         }
     };
 

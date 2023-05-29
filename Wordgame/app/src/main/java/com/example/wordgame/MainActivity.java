@@ -21,6 +21,7 @@ import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private ConstraintLayout baseLayout;
     private PopupWindow wordPopupWindow;
     private PopupWindow displayWordPopup;
+    private PopupWindow wordDefinitionPopup;
 
     // Visual attributes
     private int foundWordColor = Color.DKGRAY;
@@ -79,6 +81,9 @@ public class MainActivity extends AppCompatActivity {
     private Random random;
     private boolean gameStopped = false;
     private boolean shouldWriteStats = true;
+
+    // Definition Web Scraper
+    private Thread definitionThread = null;
 
     // Sound
     private AudioHandler audioHandler;
@@ -135,8 +140,33 @@ public class MainActivity extends AppCompatActivity {
     final Runnable scoreBoardRunnable = new Runnable() {
         @Override
         public void run() {
-            if(!gameStopped)
+            if (definitionThread != null && definitionThread.isAlive()) {
+                Log.d(TAG, "Skipping timer");
+                startTime = System.currentTimeMillis();
+                scoreBoardHandler.postDelayed(this, 500);
+                return;
+            }
+
+            if (wordDefinitionPopup != null) {
+                Log.d(TAG, "Skipping timer");
+                startTime = System.currentTimeMillis();
+                scoreBoardHandler.postDelayed(this, 500);
+                return;
+            }
+
+            long millis = System.currentTimeMillis() - startTime;
+            millis = GameSettings.getScoreBoardDuration() - millis;
+
+            // Game has ended
+            if(millis < 0 && !gameStopped) {
                 enterScoreboard();
+                return;
+            }
+
+            int seconds = (int) (millis / 1000) % 60;
+            TextView scoreTimer = wordPopupWindow.getContentView().findViewById(R.id.endScoreTimer);
+            scoreTimer.setText(getResources().getString(R.string.timer_scoreboard, seconds));
+            scoreBoardHandler.postDelayed(this, 500);
         }
     };
 
@@ -182,8 +212,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String boardString = activeBoard.getBoardString();
+        int maxScore = UserSettings.getActiveGameMode().equals("rational") ? activeBoard.getWords().size() : activeBoard.getMaxScore();
         scoreText.setText(getResources().getString(R.string.gameboard_current_score, currentScore,
-                activeBoard.getMaxScore()));
+                maxScore));
 
         audioHandler = new AudioHandler(this);
         soundIdTimer = audioHandler.addSoundToPool(R.raw.tick, 1);
@@ -347,7 +378,6 @@ public class MainActivity extends AppCompatActivity {
             linearLayout.addView(horzLayout);
 
             int textSize = TextUtils.getTileTextSize(getWindowManager());
-
             for(int row = 0; row < boardWidth; row++) {
                 Button tile = new Button(this);
                 tile.setTextSize(textSize);
@@ -504,8 +534,9 @@ public class MainActivity extends AppCompatActivity {
             wordView.setText(TextUtils.getSpannedText(wordText));
             wordsLayout.addView(wordView);
             currentScore += GameSettings.getScoreForLength(formedWord.length());
+            int maxScore = UserSettings.getActiveGameMode().equals("rational") ? activeBoard.getWords().size() : activeBoard.getMaxScore();
             scoreText.setText(getResources().getString(R.string.gameboard_current_score, currentScore,
-                    activeBoard.getMaxScore()));
+                    maxScore));
             wordsFound.add(formedWord);
             isValidWord = true;
         }
@@ -591,7 +622,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Display user score and max score
         TextView scoreText = popupView.findViewById(R.id.endScoreTextView);
-        scoreText.setText(String.format("     %d / %d     ", currentScore, activeBoard.getMaxScore()));
+        int maxScore = UserSettings.getActiveGameMode().equals("rational") ? activeBoard.getWords().size() : activeBoard.getMaxScore();
+        scoreText.setText(getResources().getString(R.string.gameboard_current_score, currentScore,
+                maxScore));
+        // scoreText.setText(String.format("%d / %d", currentScore, activeBoard.getMaxScore()));
 
         // Show all words
         LinearLayout layout = popupView.findViewById(R.id.endScoreWordLayout);
@@ -613,6 +647,7 @@ public class MainActivity extends AppCompatActivity {
             TextView view = new TextView(this);
             view.setAllCaps(true);
             view.setText(word);
+            view.setPadding(0, 1, 0, 1);
             int textColor = wordsFound.contains(word) ? getColor(R.color.dark_green) : Color.BLACK;
             view.setTextColor(textColor);
             view.setOnLongClickListener(new View.OnLongClickListener() {
@@ -661,9 +696,10 @@ public class MainActivity extends AppCompatActivity {
                     wordPopupWindow.getContentView().setAlpha(1);
                     resetAllButtons();
 
-                    if(displayWordPopup != null) {
+                    if(displayWordPopup != null)
                         displayWordPopup.dismiss();
-                    }
+                    if (definitionThread.isAlive())
+                        definitionThread.interrupt();
                     return true;
                 }
                 return false;
@@ -675,7 +711,9 @@ public class MainActivity extends AppCompatActivity {
         // Update leaderboards
         updateLeaderBoards();
 
-        scoreBoardHandler.postDelayed(scoreBoardRunnable, GameSettings.getScoreBoardDuration());
+        // scoreBoardHandler.postDelayed(scoreBoardRunnable, GameSettings.getScoreBoardDuration());
+        startTime = System.currentTimeMillis();
+        scoreBoardHandler.postDelayed(scoreBoardRunnable, 0);
     }
 
     // Create a popup showing the currently highlighted word
@@ -691,7 +729,69 @@ public class MainActivity extends AppCompatActivity {
         TextView textView = popupView.findViewById(R.id.displayWordTextView);
         textView.setText(word);
 
+        Button definitionButton = popupView.findViewById(R.id.definitionSearchButton);
+        definitionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "Definition button onClick()");
+                definitionThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        WordDefinitionService.getWordDefinition(word.toString());
+                    }
+                });
+                definitionThread.start();
+                createDefinitionPopup(word);
+            }
+        });
+
         displayWordPopup.showAtLocation(popupView, Gravity.BOTTOM, 0, 0);
+    }
+
+    private void createDefinitionPopup(CharSequence word) {
+        // Initialize the popup-window to show all words and score
+        LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.word_description_popup, null);
+
+        TextView definitionHeader = popupView.findViewById(R.id.wordDefinitionHeader);
+        ProgressBar progressBar = popupView.findViewById(R.id.wordDefinitionProgressBar);
+        TextView definitionExitButton = popupView.findViewById(R.id.wordDefinitionExitButton);
+
+        definitionHeader.setText(word);
+        progressBar.setVisibility(ProgressBar.VISIBLE);
+
+        int width = LinearLayout.LayoutParams.MATCH_PARENT;
+        int height = LinearLayout.LayoutParams.MATCH_PARENT;
+        wordDefinitionPopup = new PopupWindow(popupView, width, height, false);
+        wordDefinitionPopup.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
+        wordDefinitionPopup.setOutsideTouchable(false);
+
+        wordDefinitionPopup.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+
+        Log.d(TAG, "Created definition popup");
+
+        definitionExitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (definitionThread.isAlive())
+                    definitionThread.interrupt();
+                wordDefinitionPopup.dismiss();
+                wordDefinitionPopup = null;
+                // startTime = System.currentTimeMillis();
+            }
+        });
+
+        try {
+            definitionThread.join();
+            wordDefinitionPopup.getContentView().findViewById(R.id.wordDefinitionProgressBar).setVisibility(ProgressBar.GONE);
+            TextView textView = wordDefinitionPopup.getContentView().findViewById(R.id.wordDefinitionText);
+            textView.setText(TextUtils.getSpannedText(WordDefinitionService.getDefinitionText()));
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            wordDefinitionPopup.dismiss();
+            wordDefinitionPopup = null;
+        }
     }
 
     // Sort words according to length
@@ -712,7 +812,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String roundData = username + "/" +
-                currentScore + "/" + findBestWord();
+                currentScore + "/" + findBestWord()
+                + "/" + String.valueOf(wordsFound.size());
+
+        if (previousHighScore > 0 && currentScore > previousHighScore) {
+            roundData += "/" + String.valueOf(currentScore - previousHighScore);
+        }
 
         Intent intent = new Intent(MainActivity.this, ScoreboardActivity.class);
         intent.putExtra(EXTRA_MESSAGE, roundData);
@@ -750,7 +855,7 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 HighscoreData previousData = documentSnapshot.toObject(HighscoreData.class);
                 if(previousData != null) {
-                    previousHighScore = previousData.getScore();
+                    previousHighScore = getPreviousGameModeScore(previousData);
                 }
             }
         });
@@ -762,13 +867,30 @@ public class MainActivity extends AppCompatActivity {
             return;
 
         // Don't update score table, if previous score is greater
-        if(previousHighScore > currentScore) {
+        if (isScoreGreater())
             return;
-        }
+
         sessionReference = mFireStore.collection(collectionPath);
-        HighscoreData data = new HighscoreData(username, currentScore, findBestWord());
+        HighscoreData data = new HighscoreData(username, currentScore, findBestWord(), wordsFound.size());
         data.setUserId(fireBaseUid);
         sessionReference.document(fireBaseUid).set(data);
+        // Log.d(TAG, "Wrote highscore data to Firebase");
+    }
+
+    private int getPreviousGameModeScore(HighscoreData data) {
+        if (UserSettings.getActiveGameMode().equals("rational")) {
+            return data.getFoundWords();
+        }
+        return data.getScore();
+    }
+
+    private boolean isScoreGreater() {
+        if (UserSettings.getActiveGameMode().equals("rational")) {
+            return wordsFound.size() > currentScore;
+        }
+        else {
+            return previousHighScore > currentScore;
+        }
     }
 
     private void setDarkMode() {

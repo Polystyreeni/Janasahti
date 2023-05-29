@@ -9,22 +9,40 @@
     tools:context=".ScoreboardActivity">
 
     <TextView
+        android:id="@+id/scoreBoardTimer"
+        android:layout_width="0dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="1dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="1dp"
+        android:background="@drawable/rounded_corner_gold"
+        android:gravity="center"
+        android:text="@string/timer_next_round"
+        android:textColor="@color/black"
+        android:textAlignment="center"
+        android:textAllCaps="true"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/personalStatTextView" />
+
+    <TextView
         android:id="@+id/scoreboardTitleTextView"
         android:layout_width="0dp"
-        android:layout_height="45dp"
+        android:layout_height="50dp"
         android:layout_marginStart="1dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="2dp"
         android:layout_marginEnd="1dp"
         android:background="@drawable/rounded_corner_gold"
         android:gravity="center"
         android:text="@string/best_players"
-        android:textColor="@color/black"
         android:textAlignment="center"
         android:textAllCaps="true"
-        android:textSize="20sp"
+        android:textColor="@color/black"
+        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/personalStatTextView" />
+        app:layout_constraintTop_toBottomOf="@+id/scoreBoardTimer" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/scoreRecyclerView"

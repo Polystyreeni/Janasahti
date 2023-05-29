@@ -27,6 +27,22 @@ public class GameSettings {
 
     private static final int usernameMaxLength = 30;        // How long the username is allowed to be
 
+    private static final String[] gameModes = new String[]{"classic", "rational"};
+
+    private static final HashMap<String, String> gameModeTable = new HashMap<String, String>() {
+        {
+            put(gameModes[0], "Klassikko");
+            put(gameModes[1], "Rationaalinen");
+        }
+    };
+
+    private static final HashMap<String, String> gameModeDescriptions = new HashMap<String, String>() {
+        {
+            put(gameModes[0], "Pidemmät sanat tuottavat enemmän pisteitä");
+            put(gameModes[1], "Kaikki sanat ovat saman arvoisia, pistemäärä perustuu löydettyjen sanojen lukumäärään");
+        }
+    };
+
     // Debug settings
     private static final boolean useFirebase = true;
 
@@ -35,6 +51,8 @@ public class GameSettings {
     }
 
     public static int getScoreForLength(int len) {
+        if (UserSettings.getActiveGameMode().equals("rational"))
+            return 1;
         return scoreTable.get(len);
     }
 
@@ -46,4 +64,8 @@ public class GameSettings {
     public static int getUsernameMaxLength() { return usernameMaxLength; }
 
     public static boolean UseFirebase() { return useFirebase; }
+
+    public static String[] getGameModes() { return gameModes; }
+    public static String getGameModeDescription(String id) {return gameModeDescriptions.get(id);}
+    public static String getGameModeName(String id) {return gameModeTable.get(id);}
 }
