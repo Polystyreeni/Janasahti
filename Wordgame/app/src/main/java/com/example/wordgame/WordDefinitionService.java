@@ -11,7 +11,7 @@ import java.util.List;
 public class WordDefinitionService {
     private static String definitionText = "";
 
-    private static List<IScrapeConfig> scraperConfigs = Collections.singletonList(
+    private static final List<IScrapeConfig> scraperConfigs = Collections.singletonList(
             new SuomiSanakirjaConfig()
     );
 
