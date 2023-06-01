@@ -5,17 +5,15 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@drawable/rounder_corner"
+    android:minWidth="240dp"
     android:orientation="vertical">
 
     <TextView
         android:id="@+id/endScoreTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:layout_marginLeft="30dp"
+        android:layout_gravity="center"
         android:layout_marginTop="30dp"
-        android:layout_marginEnd="30dp"
-        android:layout_marginRight="30dp"
         android:layout_marginBottom="30dp"
         android:paddingHorizontal="14dp"
         android:text="@string/settings_menu"
@@ -27,6 +25,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/settings_colormode"
+        android:gravity="center"
         android:textColor="@color/black" />
 
     <CheckBox
@@ -36,10 +35,17 @@
         android:text="@string/settings_amoled"
         android:textColor="@color/black" />
 
-    <TextView
+    <CheckBox
+        android:id="@+id/settingCheckboxScore"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingStart="0dp"
+        android:textColor="@color/black"
+        android:text="@string/settings_scoreboard"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="5dp"
         android:paddingTop="5dp"
         android:paddingEnd="0dp"
         android:paddingBottom="0dp"
@@ -54,13 +60,18 @@
         android:value="14"
         android:valueFrom="4"
         android:valueTo="24" />
-
+    <Button
+        android:id="@+id/supportButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="10dp"
+        android:text="@string/support_button"/>
     <Button
         android:id="@+id/settingsReturnButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:layout_marginEnd="30dp"
+        android:layout_gravity="center"
         android:text="@string/settings_return" />
 
 </LinearLayout>

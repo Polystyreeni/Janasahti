@@ -341,8 +341,10 @@ public class ScoreboardActivity extends AppCompatActivity {
     }
 
     public void updateHighScores() {
-        if(!GameSettings.UseFirebase())
+        if(!GameSettings.UseFirebase()) {
+            progressBar.setVisibility(View.INVISIBLE);
             return;
+        }
 
         String field = "score";
 
@@ -370,8 +372,6 @@ public class ScoreboardActivity extends AppCompatActivity {
                         QuerySnapshot snapshot = task.getResult();
                         List<DocumentSnapshot> documents = snapshot.getDocuments();
 
-                        Log.d(TAG, "Found documents: " + documents.size());
-
                         for(DocumentSnapshot document : documents) {
                             if(!document.exists()) {
                                 Log.d(TAG, "Requested document does not exist");
@@ -390,7 +390,6 @@ public class ScoreboardActivity extends AppCompatActivity {
                         checkRanking();
                     }
                 });
-
     }
 
     private boolean isNetworkConnected() {

@@ -4,17 +4,17 @@
     android:id="@+id/endScoreLinearLayout"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:minWidth="200dp"
     android:orientation="vertical"
     android:background="@drawable/rounder_corner">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
         android:layout_marginTop="20dp"
-        android:layout_marginEnd="30dp"
         android:layout_marginBottom="30dp"
         android:text="@string/new_version_header"
+        android:layout_gravity="center"
         android:textColor="@color/black"
         android:textSize="24sp" />
 
@@ -33,9 +33,9 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
         android:layout_marginTop="10dp"
-        android:layout_marginEnd="30dp"
         android:layout_marginBottom="10dp"
         android:textColor="@color/black"
         android:text="@string/new_version_info"
@@ -45,19 +45,27 @@
         android:id="@+id/updateLink"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
         android:layout_marginTop="10dp"
-        android:layout_marginEnd="30dp"
         android:layout_marginBottom="10dp"
         android:textColor="@color/black"
         android:text="@string/new_version_link"
         android:textSize="18sp" />
+    <TextView
+        android:id="@+id/updateRequiredText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="10dp"
+        android:textColor="@color/black" />
 
     <Button
         android:id="@+id/updateReturnButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:layout_marginEnd="30dp"
+        android:layout_gravity="center"
         android:text="EnVitussa"/>
 </LinearLayout>

@@ -44,7 +44,7 @@ public class GameSettings {
     };
 
     // Debug settings
-    private static final boolean useFirebase = true;
+    private static boolean useFirebase = true;
 
     public static long getGameDuration() {
         return gameDuration;
@@ -64,6 +64,7 @@ public class GameSettings {
     public static int getUsernameMaxLength() { return usernameMaxLength; }
 
     public static boolean UseFirebase() { return useFirebase; }
+    public static void SetUseFirebase(boolean value) {useFirebase = value;}
 
     public static String[] getGameModes() { return gameModes; }
     public static String getGameModeDescription(String id) {return gameModeDescriptions.get(id);}
