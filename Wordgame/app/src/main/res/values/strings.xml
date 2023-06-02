@@ -9,7 +9,7 @@
     <string name="settings_amoled">OLED-suoja</string>
     <string name="settings_colormode">Tumma Teema</string>
     <string name="settings_textSize">Kirjainkoko</string>
-    <string name="settings_scoreboard">Käytä pistetilastoja</string>
+    <string name="settings_scoreboard">Näytä pistetilastot</string>
     <string name="settings_return">Palaa</string>
     <string name="error_version">Versiotiedon haku epäonnistui</string>
     <string name="error_scoreboard">Pistetilastojen haku epäonnistui</string>
@@ -49,6 +49,6 @@
     <string name="support_select_type">Valitse viestin tyyppi alla olevasta listasta</string>
     <string name="support_write_area">Kirjoita tähän…</string>
     <string name="button_send">Lähetä</string>
-    <string name="player_banned_text">Tämä tili on estetty.\nPistetilastot eivät ole käytössä.\n\nEston syy: %1$s\nEsto luotu: %2$s</string>
+    <string name="player_banned_text">Tämä tili on estetty.\n\nEston syy: %1$s\nEsto luotu: %2$s</string>
     <string name="player_banned_not_available">Tämä ominaisuus ei ole käytössä estetylle tilille!</string>
 </resources>

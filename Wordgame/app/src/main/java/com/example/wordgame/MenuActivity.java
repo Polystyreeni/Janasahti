@@ -19,6 +19,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
@@ -521,6 +522,11 @@ public class MenuActivity extends AppCompatActivity {
             UserSettings.setTextScale(intVal);
         });
 
+        scoreBox.setOnCheckedChangeListener((compoundButton, b) -> {
+            int value = b ? 1 : 0;
+            UserSettings.setUseScoreBoard(value);
+        });
+
         int width = LinearLayout.LayoutParams.WRAP_CONTENT;
         int height = LinearLayout.LayoutParams.WRAP_CONTENT;
         final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
@@ -536,24 +542,21 @@ public class MenuActivity extends AppCompatActivity {
                 settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
         });
 
-        supportButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (userRestricted) {
-                    Toast.makeText(MenuActivity.this,
-                            getResources().getString(R.string.player_banned_not_available),
-                            Toast.LENGTH_SHORT).show();
-                    return;
-                }
+        supportButton.setOnClickListener(view -> {
+            if (userRestricted) {
+                Toast.makeText(MenuActivity.this,
+                        getResources().getString(R.string.player_banned_not_available),
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-                if (firebaseUser != null) {
-                    // Start support activity, if user is valid
-                    Intent intent = new Intent(MenuActivity.this, SupportActivity.class);
-                    intent.putExtra(SupportActivity.EXTRA_MESSAGE, firebaseUser.getUid());
-                    startActivity(intent);
-                    popupWindow.dismiss();
-                    currentPopup = null;
-                }
+            if (firebaseUser != null) {
+                // Start support activity, if user is valid
+                Intent intent = new Intent(MenuActivity.this, SupportActivity.class);
+                intent.putExtra(SupportActivity.EXTRA_MESSAGE, firebaseUser.getUid());
+                startActivity(intent);
+                popupWindow.dismiss();
+                currentPopup = null;
             }
         });
     }

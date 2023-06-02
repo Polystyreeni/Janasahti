@@ -17,6 +17,7 @@
         android:textColor="@color/black"
         android:textAlignment="center"
         android:text="Tili estetty :("
+        android:textStyle="bold"
         android:textSize="22sp" />
 
     <TextView
