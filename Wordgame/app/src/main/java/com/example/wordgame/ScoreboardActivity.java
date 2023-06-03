@@ -144,7 +144,7 @@ public class ScoreboardActivity extends AppCompatActivity {
         // Set adapter for scoreboard
         scoreBoardAdapter = new ScoreboardAdapter(highScores);
         scoreBoard.setAdapter(scoreBoardAdapter);
-        int scoreMax = UserSettings.getActiveGameMode().equals("rational") ? playedBoard.getWords().size() : playedBoard.getMaxScore();
+        int scoreMax = ScoreUtils.getMaximumBoardScore(playedBoard);
         scoreBoardAdapter.setScoreMax(scoreMax);
         scoreBoardAdapter.setScoreImprovement(scoreImprovement);
         scoreBoardAdapter.setUserId(highscoreData.getUserId());
@@ -271,9 +271,9 @@ public class ScoreboardActivity extends AppCompatActivity {
     }
 
     private void checkRanking() {
-        int maxscore = highscoreData.getScore();
+        int maxscore = ScoreUtils.getHighScore(highscoreData);
         for(HighscoreData data : highScores) {
-            if(data.getScore() > maxscore) {
+            if(ScoreUtils.getHighScore(data) > maxscore) {
                 return;
             }
         }
@@ -283,7 +283,11 @@ public class ScoreboardActivity extends AppCompatActivity {
         text += getPerformanceText(highscoreData);
         scoreTextView.setText(TextUtils.getSpannedText(text));
         audioHandler.playSound(soundIdFirst, audioHandler.getVolume(), audioHandler.getVolume(), 1, 0, 1.0f);
-        UserStatsManager.Instance.setFirstPlaces(UserStatsManager.Instance.getFirstPlaces() + 1);
+
+        if (UserSettings.getActiveGameMode().equals("rational"))
+            UserStatsManager.Instance.setFirstPlacesRational(UserStatsManager.Instance.getFirstPlacesRational() + 1);
+        else
+            UserStatsManager.Instance.setFirstPlaces(UserStatsManager.Instance.getFirstPlaces() + 1);
         UserStatsManager.userStatsSaved = false;
     }
 
@@ -302,27 +306,51 @@ public class ScoreboardActivity extends AppCompatActivity {
     }
 
     private void updateUserStats() {
-        long totalScore = UserStatsManager.Instance.getScoreTotal();
-        int numberOfGames = UserStatsManager.Instance.getNumberOfGames();
+        if (UserSettings.getActiveGameMode().equals("rational")) {
+            long totalScore = UserStatsManager.Instance.getScoreTotalRational();
+            int numberOfGames = UserStatsManager.Instance.getNumberOfGamesRational();
+            int highestScore = UserStatsManager.Instance.getHighestScoreRational();
+            double highestPercentage = UserStatsManager.Instance.getHighestPercentageRational();
+
+            UserStatsManager.Instance.setScoreTotalRational(totalScore + highscoreData.getFoundWords());
+            UserStatsManager.Instance.setNumberOfGamesRational(numberOfGames + 1);
+            UserStatsManager.Instance.setAverageScoreRational();
+
+            if(highscoreData.getFoundWords() > highestScore)
+                UserStatsManager.Instance.setHighestScoreRational(highscoreData.getFoundWords());
+
+            float percentage = (float)highscoreData.getFoundWords() / (float)playedBoard.getWords().size();
+            if(percentage > highestPercentage)
+                UserStatsManager.Instance.setHighestPercentageRational(percentage);
+
+            Log.d(TAG, "Rational games played: " + UserStatsManager.Instance.getNumberOfGamesRational());
+        }
+        else {
+            long totalScore = UserStatsManager.Instance.getScoreTotal();
+            int numberOfGames = UserStatsManager.Instance.getNumberOfGames();
+            int highestScore = UserStatsManager.Instance.getHighestScore();
+            double highestPercentage = UserStatsManager.Instance.getHighestPercentage();
+
+            UserStatsManager.Instance.setScoreTotal(totalScore + highscoreData.getScore());
+            UserStatsManager.Instance.setNumberOfGames(numberOfGames + 1);
+            UserStatsManager.Instance.setAverageScore();
+
+            if(highscoreData.getScore() > highestScore)
+                UserStatsManager.Instance.setHighestScore(highscoreData.getScore());
+
+            float percentage = (float)highscoreData.getScore() / (float)playedBoard.getMaxScore();
+            if(percentage > highestPercentage)
+                UserStatsManager.Instance.setHighestPercentage(percentage);
+        }
+
+        // Common stats for all game modes
         long totalGameTime = UserStatsManager.Instance.getTotalGameTime();
-        int highestScore = UserStatsManager.Instance.getHighestScore();
-        double highestPercentage = UserStatsManager.Instance.getHighestPercentage();
+        UserStatsManager.Instance.setTotalGameTime(totalGameTime + GameSettings.getGameDuration());
         String longestWord = UserStatsManager.Instance.getLongestWord();
 
-        UserStatsManager.Instance.setScoreTotal(totalScore + highscoreData.getScore());
-        UserStatsManager.Instance.setNumberOfGames(numberOfGames + 1);
-        UserStatsManager.Instance.setTotalGameTime(totalGameTime + GameSettings.getGameDuration());
-
-        if(highscoreData.getScore() > highestScore)
-            UserStatsManager.Instance.setHighestScore(highscoreData.getScore());
         if(highscoreData.getBestWord().length() > longestWord.length())
             UserStatsManager.Instance.setLongestWord(highscoreData.getBestWord());
 
-        float percentage = (float)highscoreData.getScore() / (float)playedBoard.getMaxScore();
-        if(percentage > highestPercentage)
-            UserStatsManager.Instance.setHighestPercentage(percentage);
-
-        UserStatsManager.Instance.setAverageScore();
         UserStatsManager.userStatsSaved = false;
     }
 
@@ -346,13 +374,7 @@ public class ScoreboardActivity extends AppCompatActivity {
             return;
         }
 
-        String field = "score";
-
-        // Rational game mode -> sort by number of words found
-        if (UserSettings.getActiveGameMode().equals("rational"))
-        {
-            field = "foundWords";
-        }
+        String field = ScoreUtils.getScoreSortMetric();
 
         // Sort and get data from Firebase
         mFireStore.collection(collectionPath).orderBy(field, Query.Direction.DESCENDING)
@@ -382,7 +404,7 @@ public class ScoreboardActivity extends AppCompatActivity {
                             scoreBoardAdapter.notifyItemInserted(highScores.size() - 1);
                         }
 
-                        // Don't check ranking if player is offline
+                        // Don't check ranking if player is offline -> no cheating first places
                         if(highScores.size() <= 1 && !isNetworkConnected()) {
                             Log.d(TAG, "No network connection available!");
                             return;

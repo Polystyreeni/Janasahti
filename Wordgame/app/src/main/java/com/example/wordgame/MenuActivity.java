@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -652,6 +653,11 @@ public class MenuActivity extends AppCompatActivity {
         LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = inflater.inflate(R.layout.user_stats_popup, null);
 
+        if (UserSettings.getDarkModeEnabled() > 0) {
+            popupView.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_gradient_dark));
+            TextUtils.setTextColorForViews(popupView, Color.WHITE);
+        }
+
         TextView statsScoreTextHeader = popupView.findViewById(R.id.userStatsScoreTotalHeader);
         TextView statsGamesTextHeader = popupView.findViewById(R.id.userStatsGamesPlayedHeader);
         TextView statsTimeTextHeader = popupView.findViewById(R.id.userStatsGameTimeHeader);
@@ -660,6 +666,12 @@ public class MenuActivity extends AppCompatActivity {
         TextView statsPercentageTextHeader = popupView.findViewById(R.id.userStatsHighestPercentageHeader);
         TextView statsFirstTextHeader = popupView.findViewById(R.id.userStatsFirstPlacesHeader);
         TextView statsLongestWordTextHeader = popupView.findViewById(R.id.userStatsLongestWordHeader);
+        TextView statsScoreTextHeaderRat = popupView.findViewById(R.id.userStatsScoreTotalHeaderRat);
+        TextView statsGameTextHeaderRat = popupView.findViewById(R.id.userStatsGamesPlayedHeaderRat);
+        TextView statsAvgScoreTextHeaderRat = popupView.findViewById(R.id.userStatsAvgScoreHeaderRat);
+        TextView statsHighScoreTextHeaderRat = popupView.findViewById(R.id.userStatsHighestScoreHeaderRat);
+        TextView statsPercentageTextHeaderRat = popupView.findViewById(R.id.userStatsHighestPercentageHeaderRat);
+        TextView statsFirstTextHeaderRat = popupView.findViewById(R.id.userStatsFirstPlacesHeaderRat);
 
         TextView statsNameText = popupView.findViewById(R.id.userStatsName);
         TextView statsScoreText = popupView.findViewById(R.id.userStatsScoreTotal);
@@ -670,15 +682,25 @@ public class MenuActivity extends AppCompatActivity {
         TextView statsPercentageText = popupView.findViewById(R.id.userStatsHighestPercentage);
         TextView statsFirstText = popupView.findViewById(R.id.userStatsFirstPlaces);
         TextView statsLongestWordText = popupView.findViewById(R.id.userStatsLongestWord);
+        TextView statsScoreTextRat = popupView.findViewById(R.id.userStatsScoreTotalRat);
+        TextView statsGamesTextRat = popupView.findViewById(R.id.userStatsGamesPlayedRat);
+        TextView statsAvgScoreTextRat = popupView.findViewById(R.id.userStatsAvgScoreRat);
+        TextView statsHighScoreTextRat = popupView.findViewById(R.id.userStatsHighestScoreRat);
+        TextView statsPercentageTextRat = popupView.findViewById(R.id.userStatsHighestPercentageRat);
+        TextView statsFirstTextRat = popupView.findViewById(R.id.userStatsFirstPlacesRat);
         Button returnButton = popupView.findViewById(R.id.userStatsReturnButton);
 
         // Need to do this ugly list to handle dark mode text color change
-        ArrayList<TextView> textViews = new ArrayList<>(Arrays.asList(
+        /* ArrayList<TextView> textViews = new ArrayList<>(Arrays.asList(
                 statsNameText, statsScoreText, statsGamesText, statsHighScoreText,
                 statsPercentageText, statsFirstText, statsLongestWordText,
                 statsScoreTextHeader, statsGamesTextHeader, statsHighScoreTextHeader,
                 statsPercentageTextHeader, statsFirstTextHeader, statsLongestWordTextHeader,
-                statsTimeTextHeader, statsTimeText, statsAvgScoreTextHeader, statsAvgScoreText
+                statsTimeTextHeader, statsTimeText, statsAvgScoreTextHeader, statsAvgScoreText,
+                statsScoreTextHeaderRat, statsGameTextHeaderRat, statsAvgScoreTextHeaderRat,
+                statsHighScoreTextHeaderRat, statsPercentageTextHeaderRat, statsFirstTextHeaderRat,
+                statsScoreTextRat, statsGamesTextRat, statsAvgScoreTextRat, statsHighScoreTextRat,
+                statsPercentageTextRat, statsFirstTextRat
         ));
 
         if(UserSettings.getDarkModeEnabled() > 0) {
@@ -686,7 +708,7 @@ public class MenuActivity extends AppCompatActivity {
             for(TextView t : textViews) {
                 t.setTextColor(Color.WHITE);
             }
-        }
+        }*/
 
         statsNameText.setText(userName);
         statsScoreText.setText(String.valueOf(UserStatsManager.Instance.getScoreTotal()));
@@ -698,6 +720,15 @@ public class MenuActivity extends AppCompatActivity {
                 String.format("%.2f", UserStatsManager.Instance.getHighestPercentage() * 100), " %"));
         statsLongestWordText.setText(UserStatsManager.Instance.getLongestWord());
         statsFirstText.setText(String.valueOf(UserStatsManager.Instance.getFirstPlaces()));
+
+        // Rational
+        statsScoreTextRat.setText(String.valueOf(UserStatsManager.Instance.getScoreTotalRational()));
+        statsGamesTextRat.setText(String.valueOf(UserStatsManager.Instance.getNumberOfGamesRational()));
+        statsAvgScoreTextRat.setText(String.valueOf(UserStatsManager.Instance.getAverageScoreRational()));
+        statsHighScoreTextRat.setText(String.valueOf(UserStatsManager.Instance.getHighestScoreRational()));
+        statsPercentageTextRat.setText(getResources().getString(R.string.user_stats_percentage,
+                String.format("%.2f", UserStatsManager.Instance.getHighestPercentageRational() * 100), " %"));
+        statsFirstTextRat.setText(String.valueOf(UserStatsManager.Instance.getFirstPlacesRational()));
 
         int width = LinearLayout.LayoutParams.MATCH_PARENT;
         int height = LinearLayout.LayoutParams.MATCH_PARENT;

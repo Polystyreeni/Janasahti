@@ -39,6 +39,8 @@
     <string name="user_stats_longest_word">Pisin sana:</string>
     <string name="user_stats_percentage">%1$s %2$s</string>
     <string name="user_stats_avg_score">Keskiarvo per peli:</string>
+    <string name="user_stats_score_total_rat">Löydettyjä sanoja yhteensä:</string>
+    <string name="user_stats_highest_score_rat">Eniten löydettyjä sanoja:</string>
     <string name="definition_search_button">Hae määritelmä</string>
     <string name="timer_scoreboard">Pistetilastoihin: %1$d</string>
     <string name="timer_next_round">Seuraava kierros: %1$d</string>

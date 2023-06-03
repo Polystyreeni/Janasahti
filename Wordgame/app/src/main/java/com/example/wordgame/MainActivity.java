@@ -615,7 +615,17 @@ public class MainActivity extends AppCompatActivity {
         gameActive = false;
 
         resetAllButtons();
+        createWordListPopup();
 
+        // Update leaderboards
+        updateLeaderBoards();
+
+        // scoreBoardHandler.postDelayed(scoreBoardRunnable, GameSettings.getScoreBoardDuration());
+        startTime = System.currentTimeMillis();
+        scoreBoardHandler.postDelayed(scoreBoardRunnable, 0);
+    }
+
+    private void createWordListPopup() {
         // Initialize the popup-window to show all words and score
         LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = inflater.inflate(R.layout.game_end_popup, null);
@@ -698,7 +708,7 @@ public class MainActivity extends AppCompatActivity {
 
                     if(displayWordPopup != null)
                         displayWordPopup.dismiss();
-                    if (definitionThread.isAlive())
+                    if (definitionThread != null && definitionThread.isAlive())
                         definitionThread.interrupt();
                     return true;
                 }
@@ -707,13 +717,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         wordPopupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
-
-        // Update leaderboards
-        updateLeaderBoards();
-
-        // scoreBoardHandler.postDelayed(scoreBoardRunnable, GameSettings.getScoreBoardDuration());
-        startTime = System.currentTimeMillis();
-        scoreBoardHandler.postDelayed(scoreBoardRunnable, 0);
     }
 
     // Create a popup showing the currently highlighted word
@@ -730,19 +733,16 @@ public class MainActivity extends AppCompatActivity {
         textView.setText(word);
 
         Button definitionButton = popupView.findViewById(R.id.definitionSearchButton);
-        definitionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d(TAG, "Definition button onClick()");
-                definitionThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        WordDefinitionService.getWordDefinition(word.toString());
-                    }
-                });
-                definitionThread.start();
-                createDefinitionPopup(word);
-            }
+        definitionButton.setOnClickListener(view -> {
+            Log.d(TAG, "Definition button onClick()");
+            definitionThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    WordDefinitionService.getWordDefinition(word.toString());
+                }
+            });
+            definitionThread.start();
+            createDefinitionPopup(word);
         });
 
         displayWordPopup.showAtLocation(popupView, Gravity.BOTTOM, 0, 0);
@@ -770,15 +770,12 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, "Created definition popup");
 
-        definitionExitButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (definitionThread.isAlive())
-                    definitionThread.interrupt();
-                wordDefinitionPopup.dismiss();
-                wordDefinitionPopup = null;
-                // startTime = System.currentTimeMillis();
-            }
+        definitionExitButton.setOnClickListener(view -> {
+            if (definitionThread.isAlive())
+                definitionThread.interrupt();
+            wordDefinitionPopup.dismiss();
+            wordDefinitionPopup = null;
+            // startTime = System.currentTimeMillis();
         });
 
         try {
@@ -850,13 +847,10 @@ public class MainActivity extends AppCompatActivity {
         if(!GameSettings.UseFirebase())
             return;
         sessionReference = mFireStore.collection(collectionPath);
-        sessionReference.document(fireBaseUid).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-            @Override
-            public void onSuccess(DocumentSnapshot documentSnapshot) {
-                HighscoreData previousData = documentSnapshot.toObject(HighscoreData.class);
-                if(previousData != null) {
-                    previousHighScore = getPreviousGameModeScore(previousData);
-                }
+        sessionReference.document(fireBaseUid).get().addOnSuccessListener(documentSnapshot -> {
+            HighscoreData previousData = documentSnapshot.toObject(HighscoreData.class);
+            if(previousData != null) {
+                previousHighScore = ScoreUtils.getHighScore(previousData);
             }
         });
     }
@@ -870,18 +864,27 @@ public class MainActivity extends AppCompatActivity {
         if (isScoreGreater())
             return;
 
+        int score = calculateScore();
+
+        Log.d(TAG, "Score from game: " + score);
+
         sessionReference = mFireStore.collection(collectionPath);
-        HighscoreData data = new HighscoreData(username, currentScore, findBestWord(), wordsFound.size());
+        HighscoreData data = new HighscoreData(username, score, findBestWord(), wordsFound.size());
         data.setUserId(fireBaseUid);
         sessionReference.document(fireBaseUid).set(data);
-        // Log.d(TAG, "Wrote highscore data to Firebase");
     }
 
-    private int getPreviousGameModeScore(HighscoreData data) {
+    private int calculateScore() {
+        // Force update current score to classic mode -> avoids messing up avg score
         if (UserSettings.getActiveGameMode().equals("rational")) {
-            return data.getFoundWords();
+            int score = 0;
+            for (String word : wordsFound) {
+                score += GameSettings.getScoreForLength(word.length());
+            }
+            return score;
         }
-        return data.getScore();
+
+        return currentScore;
     }
 
     private boolean isScoreGreater() {

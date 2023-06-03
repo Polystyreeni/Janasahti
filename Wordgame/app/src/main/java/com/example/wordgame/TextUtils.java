@@ -1,11 +1,17 @@
 package com.example.wordgame;
 
+import android.graphics.Color;
 import android.os.Build;
 import android.text.Html;
 import android.text.Spanned;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 import java.util.concurrent.TimeUnit;
 
@@ -41,5 +47,30 @@ public class TextUtils {
         int minutes = (int)TimeUnit.MILLISECONDS.toMinutes(millis);
 
         return String.format("%d d, %d h, %d min", days, hours, minutes);
+    }
+
+    /**
+     * Recursive function to set color of all text views
+     * Used for setting dark mode
+     * @param v the parent view
+     * @param color the color to apply to all text views
+     */
+    public static void setTextColorForViews(View v, int color) {
+        try {
+            if (v instanceof ViewGroup) {
+                ViewGroup group = (ViewGroup) v;
+                for (int i = 0; i < group.getChildCount(); i++) {
+                    View child = group.getChildAt(i);
+                    setTextColorForViews(child, color);
+                }
+            }
+            else if (v instanceof TextView) {
+                ((TextView) v).setTextColor(color);
+            }
+
+        } catch (Exception e) {
+            Log.d(TAG, "Could not set text color for views: " + e);
+        }
+
     }
 }

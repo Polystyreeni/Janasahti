@@ -39,7 +39,16 @@ public class UserStatsManager {
             Instance.setFirstPlaces(Integer.parseInt(getSetting(settings, 4)));
             Instance.setHighestPercentage(Float.parseFloat(getSetting(settings, 5)));
             Instance.setLongestWord(getSetting(settings, 6));
+
+            // Rational
+            Instance.setScoreTotalRational(Long.parseLong(getSetting(settings, 8)));
+            Instance.setNumberOfGamesRational(Integer.parseInt(getSetting(settings, 9)));
+            Instance.setHighestScoreRational(Integer.parseInt(getSetting(settings, 10)));
+            Instance.setFirstPlacesRational(Integer.parseInt(getSetting(settings, 11)));
+            Instance.setHighestPercentageRational(Float.parseFloat(getSetting(settings, 12)));
+
             Instance.setAverageScore();
+            Instance.setAverageScoreRational();
 
             userStatsSaved = true;
 
@@ -73,7 +82,12 @@ public class UserStatsManager {
                     + "/" + String.valueOf(Instance.getFirstPlaces())
                     + "/" + String.valueOf(Instance.getHighestPercentage())
                     + "/" + Instance.getLongestWord()
-                    + "/" + String.valueOf(Instance.getAverageScore());
+                    + "/" + String.valueOf(Instance.getAverageScore())
+                    + "/" + String.valueOf(Instance.getScoreTotalRational())
+                    + "/" + String.valueOf(Instance.getNumberOfGamesRational())
+                    + "/" + String.valueOf(Instance.getHighestScoreRational())
+                    + "/" + String.valueOf(Instance.getFirstPlacesRational())
+                    + "/" + String.valueOf(Instance.getHighestPercentageRational());
 
             stream.write(settings.getBytes(StandardCharsets.UTF_8));
             stream.close();

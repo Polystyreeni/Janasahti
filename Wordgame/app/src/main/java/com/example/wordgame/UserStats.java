@@ -10,6 +10,14 @@ public class UserStats {
     private float highestPercentage;
     private String longestWord;
 
+    // Rational
+    private long scoreTotalRational;
+    private int numberOfGamesRational;
+    private int highestScoreRational;
+    private int averageScoreRational;
+    private int firstPlacesRational;
+    private float highestPercentageRational;
+
     public UserStats() {
         this.scoreTotal = 0;
         this.numberOfGames = 0;
@@ -19,6 +27,12 @@ public class UserStats {
         this.firstPlaces = 0;
         this.highestPercentage = 0;
         this.longestWord = "-";
+        this.scoreTotalRational = 0;
+        this.numberOfGamesRational = 0;
+        this.highestScoreRational = 0;
+        this.averageScoreRational = 0;
+        this.firstPlacesRational = 0;
+        this.highestPercentageRational = 0;
     }
 
     public long getScoreTotal() {
@@ -76,5 +90,54 @@ public class UserStats {
 
     public void setLongestWord(String word) {
         this.longestWord = word;
+    }
+
+    public long getScoreTotalRational() {
+        return scoreTotalRational;
+    }
+
+    public void setScoreTotalRational(long scoreTotalRational) {
+        this.scoreTotalRational = scoreTotalRational;
+    }
+
+    public int getNumberOfGamesRational() {
+        return numberOfGamesRational;
+    }
+
+    public void setNumberOfGamesRational(int numberOfGamesRational) {
+        this.numberOfGamesRational = numberOfGamesRational;
+    }
+
+    public int getHighestScoreRational() {
+        return highestScoreRational;
+    }
+
+    public void setHighestScoreRational(int highestScoreRational) {
+        this.highestScoreRational = highestScoreRational;
+    }
+
+    public int getAverageScoreRational() {
+        return averageScoreRational;
+    }
+
+    public void setAverageScoreRational() {
+        if (numberOfGamesRational <= 0) this.averageScoreRational = 0;
+        else this.averageScoreRational = this.highestScoreRational / this.numberOfGamesRational;
+    }
+
+    public int getFirstPlacesRational() {
+        return firstPlacesRational;
+    }
+
+    public void setFirstPlacesRational(int firstPlacesRational) {
+        this.firstPlacesRational = firstPlacesRational;
+    }
+
+    public float getHighestPercentageRational() {
+        return highestPercentageRational;
+    }
+
+    public void setHighestPercentageRational(float highestPercentageRational) {
+        this.highestPercentageRational = highestPercentageRational;
     }
 }
