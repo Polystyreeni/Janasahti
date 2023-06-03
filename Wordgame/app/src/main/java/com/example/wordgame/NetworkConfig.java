@@ -41,6 +41,8 @@ The contents of the files behind these URLs are as follows:
                     - word: String, a word that can be found on this board
     - An example boardFile can be found here:
         - https://drive.google.com/file/d/1I8nfebuCtRsj0iCMPMlPcpdL22e3Xp7A/view?usp=sharing
+
+    If you want Email-support to work, you also have to set your own email address(es) below
  */
 
 public class NetworkConfig {
@@ -53,6 +55,9 @@ public class NetworkConfig {
 
     // REPLACE THIS URL WITH YOUR OWN
     private static final String MESSAGE_URL = "DUMMY-URL-REPLACE-ME";
+
+    // REPLACE THESE EMAILS WITH YOUR OWN
+    private static final String[] SUPPORT_EMAIL = new String[]{"test@test.fi"};
 
     private static final HashMap<String, String> URLCONFIG = new HashMap<String, String>() {
         {
@@ -67,6 +72,10 @@ public class NetworkConfig {
             throw new InvalidUrlRequestException("The requested URL type was not found");
         }
         return URLCONFIG.get(type);
+    }
+
+    public static String[] getSupportEmail() {
+        return SUPPORT_EMAIL;
     }
 }
 

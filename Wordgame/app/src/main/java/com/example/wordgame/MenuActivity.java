@@ -1,6 +1,5 @@
 package com.example.wordgame;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
@@ -16,11 +15,11 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
@@ -29,25 +28,25 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.wordgame.usermanagement.BlackListData;
 import com.google.android.material.slider.Slider;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-
-import org.w3c.dom.Text;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MenuActivity extends AppCompatActivity {
@@ -67,7 +66,6 @@ public class MenuActivity extends AppCompatActivity {
     private Button userStatsButton;
     private Spinner gameModeSpinner;
     private TextView gameModeDescription;
-    private ArrayAdapter<String> gameModeArrayAdaper;
 
     // Menu state
     private Thread boardThread = null;
@@ -81,6 +79,7 @@ public class MenuActivity extends AppCompatActivity {
     private CollectionReference sessionReference;
     private FirebaseAuth firebaseAuth;
     private FirebaseUser firebaseUser;
+    private boolean userRestricted = false;
 
     Handler boardLoadHandler = new Handler();
     Runnable boardLoadRunnable = new Runnable() {
@@ -92,7 +91,6 @@ public class MenuActivity extends AppCompatActivity {
 
             else {
                 boardLoadProgressBar.setVisibility(View.GONE);
-
                 startGame();
                 boardLoadHandler.removeCallbacks(boardLoadRunnable);
             }
@@ -133,9 +131,9 @@ public class MenuActivity extends AppCompatActivity {
             gameModeNames[i] = GameSettings.getGameModeName(GameSettings.getGameModes()[i]);
         }
 
-        gameModeArrayAdaper = new ArrayAdapter<>(this, R.layout.spinner_item, gameModeNames);
-        gameModeArrayAdaper.setDropDownViewResource(R.layout.spinner_item_dropdown);
-        gameModeSpinner.setAdapter(gameModeArrayAdaper);
+        ArrayAdapter<String> gameModeArrayAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, gameModeNames);
+        gameModeArrayAdapter.setDropDownViewResource(R.layout.spinner_item_dropdown);
+        gameModeSpinner.setAdapter(gameModeArrayAdapter);
 
         settingsButton = findViewById(R.id.settingsButton);
         userStatsButton = findViewById(R.id.userStatsButton);
@@ -202,14 +200,11 @@ public class MenuActivity extends AppCompatActivity {
             UserStatsManager.saveStats(getApplicationContext());
 
         signInAnonymously();
-        layout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                // Do this with delay, because not working otherwise
-                if(UserSettings.getDarkModeEnabled() > 0) {
-                    settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
-                    userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
-                }
+        layout.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            // Do this with delay, because not working otherwise
+            if(UserSettings.getDarkModeEnabled() > 0) {
+                settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
+                userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
             }
         });
     }
@@ -245,6 +240,7 @@ public class MenuActivity extends AppCompatActivity {
         // Check if user is signed in (non-null) and update UI accordingly.
         if(GameSettings.UseFirebase()) {
             firebaseUser = firebaseAuth.getCurrentUser();
+            checkUserRestricted();
         }
     }
 
@@ -279,12 +275,20 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private void startGame() {
+        // If update is required, block start game
+        if (VersionManager.getLatestVersion().endsWith("r") &&
+                !VersionManager.getVersion().equals(VersionManager.getLatestVersion())) {
+            Toast.makeText(MenuActivity.this, getString(R.string.new_version_block_action),
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         userName = userNameField.getText().toString();
-        if(userName.isEmpty()) {
+        if(userName.isEmpty() || userName.trim().length() <= 0) {
             userName = "Nimetön";
         }
 
-        // We're using the / sign for passing data, don't allow user to have it in their username
+        // We're using the '/' character for passing data, don't allow user to have it in their username
         if(userName.contains("/"))
             userName = userName.replaceAll("/", " ");
 
@@ -357,7 +361,8 @@ public class MenuActivity extends AppCompatActivity {
                     + "/" + String.valueOf(UserSettings.getOledProtectionEnabled())
                     + "/" + String.valueOf(UserSettings.getTextScale())
                     + "/" + UserSettings.getMOTDId()
-                    + "/" + UserSettings.getActiveGameMode();
+                    + "/" + UserSettings.getActiveGameMode()
+                    + "/" + UserSettings.getUseScoreBoard();
 
             stream.write(settings.getBytes(StandardCharsets.UTF_8));
             stream.close();
@@ -418,6 +423,35 @@ public class MenuActivity extends AppCompatActivity {
                 });
     }
 
+    private void checkUserRestricted() {
+        mFireStore.collection("wg_banlist").get().addOnCompleteListener(task -> {
+            if (!task.isSuccessful()) {
+                Log.d(TAG, "Could not read blacklist data");
+                return;
+            }
+
+            QuerySnapshot snapshot = task.getResult();
+            List<DocumentSnapshot> documents = snapshot.getDocuments();
+            for (DocumentSnapshot document : documents) {
+                if (document.exists()) {
+                    BlackListData blackListData = document.toObject(BlackListData.class);
+                    if (blackListData.getUserID().equals(firebaseAuth.getUid())) {
+                        restrictUser(blackListData);
+                    }
+                }
+            }
+        });
+    }
+
+    private void restrictUser(BlackListData data) {
+        GameSettings.SetUseFirebase(false);
+        userRestricted = true;
+        startButton.setClickable(false);
+        if (boardThread != null && boardThread.isAlive())
+            boardThread.interrupt();
+        showBannedPopup(data.getRestrictionReason(), data.getRestrictionDate());
+    }
+
     public void onVersionRetrieved(String latestVersion) {
         if(latestVersion.isEmpty()) {
             Toast.makeText(MenuActivity.this, R.string.error_version, Toast.LENGTH_SHORT).show();
@@ -425,11 +459,11 @@ public class MenuActivity extends AppCompatActivity {
             return;
         }
 
+        VersionManager.setLatestVersion(latestVersion);
         String currentVersion = VersionManager.getVersion();
         if(!currentVersion.equals(latestVersion)) {
             // Create popup with update prompt
             showUpdatePopup(latestVersion);
-            return;
         }
 
         versionChecked = true;
@@ -459,12 +493,18 @@ public class MenuActivity extends AppCompatActivity {
 
         CheckBox darkBox = popupView.findViewById(R.id.settingCheckboxColor);
         CheckBox oledBox = popupView.findViewById(R.id.settingCheckboxOled);
+        CheckBox scoreBox = popupView.findViewById(R.id.settingCheckboxScore);
         Slider textSizeSlider = popupView.findViewById(R.id.settingsTextSizeSlider);
+        Button supportButton = popupView.findViewById(R.id.supportButton);
         Button returnButton = popupView.findViewById(R.id.settingsReturnButton);
 
         darkBox.setChecked(UserSettings.getDarkModeEnabled() > 0);
         oledBox.setChecked(UserSettings.getOledProtectionEnabled() > 0);
+        scoreBox.setChecked(UserSettings.getUseScoreBoard() > 0);
         textSizeSlider.setValue(UserSettings.getTextScale());
+
+        // Emails not allowed, when user is restricted
+        supportButton.setClickable(!userRestricted);
 
         darkBox.setOnCheckedChangeListener((compoundButton, b) -> {
             int value = b ? 1 : 0;
@@ -482,6 +522,11 @@ public class MenuActivity extends AppCompatActivity {
             UserSettings.setTextScale(intVal);
         });
 
+        scoreBox.setOnCheckedChangeListener((compoundButton, b) -> {
+            int value = b ? 1 : 0;
+            UserSettings.setUseScoreBoard(value);
+        });
+
         int width = LinearLayout.LayoutParams.WRAP_CONTENT;
         int height = LinearLayout.LayoutParams.WRAP_CONTENT;
         final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
@@ -495,6 +540,24 @@ public class MenuActivity extends AppCompatActivity {
             currentPopup = null;
             if(UserSettings.getDarkModeEnabled() > 0)
                 settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
+        });
+
+        supportButton.setOnClickListener(view -> {
+            if (userRestricted) {
+                Toast.makeText(MenuActivity.this,
+                        getResources().getString(R.string.player_banned_not_available),
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (firebaseUser != null) {
+                // Start support activity, if user is valid
+                Intent intent = new Intent(MenuActivity.this, SupportActivity.class);
+                intent.putExtra(SupportActivity.EXTRA_MESSAGE, firebaseUser.getUid());
+                startActivity(intent);
+                popupWindow.dismiss();
+                currentPopup = null;
+            }
         });
     }
 
@@ -514,13 +577,37 @@ public class MenuActivity extends AppCompatActivity {
         currentPopup = popupWindow;
 
         motdText.setText(TextUtils.getSpannedText(MOTDManager.getMessageText()));
-        motdExitButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                MOTDReceived = true;
-                currentPopup = null;
-                popupWindow.dismiss();
-            }
+        motdExitButton.setOnClickListener(view -> {
+            MOTDReceived = true;
+            currentPopup = null;
+            popupWindow.dismiss();
+        });
+    }
+
+    private void showBannedPopup(String banReason, String banDate) {
+        if (currentPopup != null) {
+            currentPopup.dismiss();
+            currentPopup = null;
+        }
+
+        LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.player_banned_popup, null);
+
+        TextView description = popupView.findViewById(R.id.playerBannedTextView);
+        Button exitButton = popupView.findViewById(R.id.playerBannedExitButton);
+
+        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
+        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        final PopupWindow popupWindow = new PopupWindow(popupView, width, height, false);
+        popupWindow.setAnimationStyle(R.style.Animation_AppCompat_Dialog);
+        popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
+
+        currentPopup = popupWindow;
+        description.setText(getResources().getString(R.string.player_banned_text, banReason, banDate));
+
+        exitButton.setOnClickListener(view -> {
+            currentPopup = null;
+            popupWindow.dismiss();
         });
     }
 
@@ -535,6 +622,11 @@ public class MenuActivity extends AppCompatActivity {
         TextView linkView = popupView.findViewById(R.id.updateLink);
         Linkify.addLinks(linkView, Linkify.ALL);
         Button cancelButton = popupView.findViewById(R.id.updateReturnButton);
+        TextView requiredText = popupView.findViewById(R.id.updateRequiredText);
+
+        if (latestVersion.endsWith("r"))
+            requiredText.setText(TextUtils.getSpannedText(
+                    getResources().getString(R.string.new_version_required)));
 
         int width = LinearLayout.LayoutParams.WRAP_CONTENT;
         int height = LinearLayout.LayoutParams.WRAP_CONTENT;

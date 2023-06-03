@@ -13,9 +13,14 @@ public class VersionManager {
     private static final String TAG = "VersionManager";
     private static final String version = "1.4.1";
 
+    // Will be overridden once version file is fetched
+    private static String latestVersion = "1.4.1";
+
     public static String getVersion() {
         return version;
     }
+    public static void setLatestVersion(String version) {latestVersion = version;}
+    public static String getLatestVersion() {return latestVersion;}
 
     public static void getLatestVersion(MenuActivity activity) {
         try {
@@ -26,12 +31,9 @@ public class VersionManager {
                 public void onResponse(String response) {
                     activity.onVersionRetrieved(response);
                 }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    activity.onVersionRetrieved("");
-                    Log.d(TAG, "Version file retrieving failed");
-                }
+            }, error -> {
+                activity.onVersionRetrieved("");
+                Log.d(TAG, "Version file retrieving failed");
             });
 
             queue.add(request);

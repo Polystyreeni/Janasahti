@@ -14,6 +14,7 @@ public class UserSettings {
     private static int textScale = 14;
     private static String MOTDId = "";
     private static String activeGameMode = "classic";
+    private static int useScoreBoard = 1;
 
     public static List<MethodRunner> userSettings = new ArrayList<>();
 
@@ -53,6 +54,15 @@ public class UserSettings {
                     setActiveGameMode((String)arg);
             }
         });
+        userSettings.add(new MethodRunner() {
+            @Override
+            public void run(Object arg) {
+                if (arg != null) {
+                    int value = Integer.parseInt((String) arg);
+                    setUseScoreBoard(value);
+                }
+            }
+        });
     }
 
     public static int getDarkModeEnabled() { return darkModeEnabled; }
@@ -60,10 +70,15 @@ public class UserSettings {
     public static int getTextScale() {return textScale;}
     public static String getMOTDId() {return MOTDId;}
     public static String getActiveGameMode() {return activeGameMode;}
+    public static int getUseScoreBoard() {return useScoreBoard;}
 
     public static void setDarkModeEnabled(int value) {darkModeEnabled = value;}
     public static void setOledProtectionEnabled(int value) {oledProtectionEnabled = value;}
     public static void setTextScale(int value) {textScale = value;}
     public static void setMOTDId(String value) {MOTDId = value;}
     public static void setActiveGameMode(String value) {activeGameMode = value;}
+    public static void setUseScoreBoard(int value) {
+        useScoreBoard = value;
+        GameSettings.SetUseFirebase(value > 0);
+    }
 }
