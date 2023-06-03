@@ -15,7 +15,7 @@
     <string name="error_scoreboard">Pistetilastojen haku epäonnistui</string>
     <string name="new_version_header">Päivitys saatavilla</string>
     <string name="new_version_info">Sovelluksen käytettävyys on läpikäynyt kehitystä\n
-    Uuden version voi ladata alla olevasta linkistä:</string>
+    Uuden version voi ladata alla olevasta linkistä (etsi oikea versio ja lataa .apk-päätteinen tiedosto):</string>
     <string name="new_version_number">Nykyinen versio: %1$s | Uusi versio: %2$s</string>
     <string name="new_version_link">https://github.com/Polystyreeni/Janasahti/releases</string>
     <string name="new_version_required"><![CDATA[Tämä päivitys on <b>PAKOLLINEN</b>]]></string>
@@ -44,7 +44,7 @@
     <string name="definition_search_button">Hae määritelmä</string>
     <string name="timer_scoreboard">Pistetilastoihin: %1$d</string>
     <string name="timer_next_round">Seuraava kierros: %1$d</string>
-    <string name="motd_header">Ilmoitusasiaa:</string>
+    <string name="motd_header">Ilmoitusasiaa</string>
     <string name="motd_confirm">Okei</string>
     <string name="gamemode_header">Pelimuoto</string>
     <string name="support_button">Ota yhteyttä</string>
