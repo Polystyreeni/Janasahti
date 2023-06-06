@@ -1,8 +1,10 @@
 package com.example.wordgame;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,7 +13,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.wordgame.usermanagement.EmailSendData;
@@ -31,6 +35,11 @@ public class SupportActivity extends AppCompatActivity {
     public static final String EXTRA_MESSAGE =
             "com.example.wordgame.extra.MESSAGE";
 
+    // UI components
+    private RelativeLayout baseLayout;
+    private TextView supportHeaderText;
+    private TextView hintHeaderText;
+
     // Activity state
     private String activeMessageType;
 
@@ -45,6 +54,9 @@ public class SupportActivity extends AppCompatActivity {
         Spinner messageTypeSpinner = findViewById(R.id.supportTypeSpinner);
         EditText contentText = findViewById(R.id.supportEditText);
         Button sendMessageButton = findViewById(R.id.sendSupportMessage);
+        baseLayout = findViewById(R.id.layout_support);
+        supportHeaderText = findViewById(R.id.supportHeader);
+        hintHeaderText = findViewById(R.id.supportTypeHint);
 
         final String[] supportTypes = new String[]{"Avunpyyntö", "Bugi", "Palaute", "Puuttuva sana", "Muu"};
 
@@ -80,12 +92,13 @@ public class SupportActivity extends AppCompatActivity {
             composeEmail(address, subject, content);
         });
 
-        // Initialize firebase
-        // Firebase
+        // Initialize Firebase
         FirebaseFirestore mFireStore = FirebaseFirestore.getInstance();
         String collectionName = "wg_emails";
         sessionReference = mFireStore.collection(collectionName);
         firebaseAuth = FirebaseAuth.getInstance();
+
+        setDarkMode();
     }
 
     private void composeEmail(String[] address, String subject, String content) {
@@ -108,6 +121,14 @@ public class SupportActivity extends AppCompatActivity {
                     .addOnFailureListener(e -> Log.w(TAG, "Error writing sent data", e));
 
             startActivity(intent);
+        }
+    }
+
+    private void setDarkMode() {
+        if (UserSettings.getDarkModeEnabled() > 0) {
+            baseLayout.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_gradient_dark));
+            supportHeaderText.setTextColor(Color.WHITE);
+            hintHeaderText.setTextColor(Color.WHITE);
         }
     }
 }

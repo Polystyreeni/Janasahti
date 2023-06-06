@@ -4,7 +4,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:minWidth="240dp"
+    android:minWidth="300dp"
     android:background="@drawable/rounder_corner">
 
     <TextView
@@ -22,7 +22,7 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_marginHorizontal="4dp"
-        android:layout_height="180dp">
+        android:layout_height="280dp">
 
         <TextView
             android:id="@+id/motdTextView"

@@ -9,11 +9,11 @@
         android:id="@+id/supportHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/support_button"
-        android:textAllCaps="true"
         android:layout_marginTop="10dp"
-        android:textAlignment="center"
         android:paddingBottom="10dp"
+        android:text="@string/support_button"
+        android:textAlignment="center"
+        android:textAllCaps="true"
         android:textColor="@color/black"
         android:textSize="24sp" />
 
@@ -47,30 +47,30 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/supportTypeSpinner"
-        android:layout_marginBottom="80dp"
         android:layout_marginHorizontal="10dp"
+        android:layout_marginBottom="80dp"
         android:background="@drawable/rounder_corner">
 
         <EditText
             android:id="@+id/supportEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/support_write_area"
-            android:paddingHorizontal="2dp"
-            android:minLines="2"
-            android:textColor="@color/black"
             android:background="@null"
-            />
+            android:hint="@string/support_write_area"
+            android:minLines="2"
+            android:paddingHorizontal="2dp"
+            android:textColorHint="@color/wet_asphalt"
+            android:textColor="@color/black" />
     </ScrollView>
 
     <Button
         android:id="@+id/sendSupportMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="40dp"
         android:layout_below="@id/supportTextScrollView"
+        android:layout_centerHorizontal="true"
         android:layout_marginTop="-70dp"
         android:gravity="center"
-        android:layout_centerHorizontal="true"
+        android:paddingHorizontal="40dp"
         android:text="@string/button_send" />
 </RelativeLayout>

@@ -122,7 +122,7 @@ public class UserStats {
 
     public void setAverageScoreRational() {
         if (numberOfGamesRational <= 0) this.averageScoreRational = 0;
-        else this.averageScoreRational = this.highestScoreRational / this.numberOfGamesRational;
+        else this.averageScoreRational = (int)(this.scoreTotalRational / this.numberOfGamesRational);
     }
 
     public int getFirstPlacesRational() {

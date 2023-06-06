@@ -5,7 +5,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:minWidth="200dp"
+    android:minWidth="240dp"
     android:background="@drawable/rounder_corner">
 
     <TextView
@@ -39,6 +39,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:divider="@drawable/tall_divider"
+            android:paddingHorizontal="2dp"
             android:orientation="vertical">
         </LinearLayout>
     </ScrollView>

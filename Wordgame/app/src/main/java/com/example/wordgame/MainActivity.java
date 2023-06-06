@@ -745,7 +745,8 @@ public class MainActivity extends AppCompatActivity {
             createDefinitionPopup(word);
         });
 
-        displayWordPopup.showAtLocation(popupView, Gravity.BOTTOM, 0, 0);
+        //displayWordPopup.showAsDropDown(wordPopupWindow.getContentView());
+        displayWordPopup.showAtLocation(popupView, Gravity.BOTTOM, 0, 300);
     }
 
     private void createDefinitionPopup(CharSequence word) {
