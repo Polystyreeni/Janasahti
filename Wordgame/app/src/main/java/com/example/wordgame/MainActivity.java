@@ -141,14 +141,12 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             if (definitionThread != null && definitionThread.isAlive()) {
-                Log.d(TAG, "Skipping timer");
                 startTime = System.currentTimeMillis();
                 scoreBoardHandler.postDelayed(this, 500);
                 return;
             }
 
             if (wordDefinitionPopup != null) {
-                Log.d(TAG, "Skipping timer");
                 startTime = System.currentTimeMillis();
                 scoreBoardHandler.postDelayed(this, 500);
                 return;
@@ -734,23 +732,16 @@ public class MainActivity extends AppCompatActivity {
 
         Button definitionButton = popupView.findViewById(R.id.definitionSearchButton);
         definitionButton.setOnClickListener(view -> {
-            Log.d(TAG, "Definition button onClick()");
-            definitionThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    WordDefinitionService.getWordDefinition(word.toString());
-                }
-            });
+            definitionThread = new Thread(() -> WordDefinitionService.getWordDefinition(word.toString()));
             definitionThread.start();
             createDefinitionPopup(word);
         });
 
-        //displayWordPopup.showAsDropDown(wordPopupWindow.getContentView());
         displayWordPopup.showAtLocation(popupView, Gravity.BOTTOM, 0, 300);
     }
 
     private void createDefinitionPopup(CharSequence word) {
-        // Initialize the popup-window to show all words and score
+        // Initialize the popup-window to show word definition
         LayoutInflater inflater = (LayoutInflater)getSystemService(LAYOUT_INFLATER_SERVICE);
         View popupView = inflater.inflate(R.layout.word_description_popup, null);
 
@@ -769,16 +760,14 @@ public class MainActivity extends AppCompatActivity {
 
         wordDefinitionPopup.showAtLocation(popupView, Gravity.CENTER, 0, 0);
 
-        Log.d(TAG, "Created definition popup");
-
         definitionExitButton.setOnClickListener(view -> {
             if (definitionThread.isAlive())
                 definitionThread.interrupt();
             wordDefinitionPopup.dismiss();
             wordDefinitionPopup = null;
-            // startTime = System.currentTimeMillis();
         });
 
+        // Wait for scraper to finish search and show scraped text
         try {
             definitionThread.join();
             wordDefinitionPopup.getContentView().findViewById(R.id.wordDefinitionProgressBar).setVisibility(ProgressBar.GONE);
@@ -866,15 +855,16 @@ public class MainActivity extends AppCompatActivity {
             return;
 
         int score = calculateScore();
-
-        Log.d(TAG, "Score from game: " + score);
-
         sessionReference = mFireStore.collection(collectionPath);
         HighscoreData data = new HighscoreData(username, score, findBestWord(), wordsFound.size());
         data.setUserId(fireBaseUid);
         sessionReference.document(fireBaseUid).set(data);
     }
 
+    /**
+     * Utility function to calculate game mode specific score
+     * @return score based on game mode
+     */
     private int calculateScore() {
         // Force update current score to classic mode -> avoids messing up avg score
         if (UserSettings.getActiveGameMode().equals("rational")) {
@@ -888,6 +878,10 @@ public class MainActivity extends AppCompatActivity {
         return currentScore;
     }
 
+    /**
+     * Utility function to check if previous score was better than current
+     * @return true if score greater
+     */
     private boolean isScoreGreater() {
         if (UserSettings.getActiveGameMode().equals("rational")) {
             return wordsFound.size() > currentScore;

@@ -101,6 +101,12 @@ public class SupportActivity extends AppCompatActivity {
         setDarkMode();
     }
 
+    /**
+     * Compose an email based on user written content
+     * @param address the addresses to send this email to
+     * @param subject the 'title' of the email
+     * @param content the body of the email
+     */
     private void composeEmail(String[] address, String subject, String content) {
         Intent intent = new Intent(Intent.ACTION_SENDTO);
         intent.setData(Uri.parse("mailto:"));

@@ -322,8 +322,6 @@ public class ScoreboardActivity extends AppCompatActivity {
             float percentage = (float)highscoreData.getFoundWords() / (float)playedBoard.getWords().size();
             if(percentage > highestPercentage)
                 UserStatsManager.Instance.setHighestPercentageRational(percentage);
-
-            Log.d(TAG, "Rational games played: " + UserStatsManager.Instance.getNumberOfGamesRational());
         }
         else {
             long totalScore = UserStatsManager.Instance.getScoreTotal();
