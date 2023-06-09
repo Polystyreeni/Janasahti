@@ -1,5 +1,6 @@
 package com.example.wordgame;
 
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,6 +47,7 @@ public class ScoreboardAdapter extends RecyclerView.Adapter<ScoreboardAdapter.Vi
     }
 
     // Replace the contents of a view (invoked by the layout manager)
+    @SuppressLint("DefaultLocale")
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, final int position) {
 
@@ -58,7 +60,7 @@ public class ScoreboardAdapter extends RecyclerView.Adapter<ScoreboardAdapter.Vi
         if (UserSettings.getActiveGameMode().equals("rational")) {
             text = String.format("<b>%d</b>:   %s  -  %d sanaa &nbsp&nbsp<i>%s</i> &nbsp %.2f %s", position + 1,
                     data.getUserName(), data.getFoundWords(), data.getBestWord(),
-                    ((float)data.getScore() / (float)scoreMax) * 100, "%");
+                    ((float)data.getFoundWords() / (float)scoreMax) * 100, "%");
         }
         else {
             text = String.format("<b>%d</b>:   %s  -  %d pistettä &nbsp&nbsp<i>%s</i> &nbsp %.2f %s", position + 1,
