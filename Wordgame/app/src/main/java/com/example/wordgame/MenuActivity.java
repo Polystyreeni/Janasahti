@@ -81,15 +81,13 @@ public class MenuActivity extends AppCompatActivity {
     private FirebaseAuth firebaseAuth;
     private FirebaseUser firebaseUser;
     private boolean userRestricted = false;
+    private boolean banCheckComplete = false;
 
     Handler boardLoadHandler = new Handler();
     Runnable boardLoadRunnable = new Runnable() {
         @Override
         public void run() {
-            if(boardThread.isAlive() || !versionChecked || !MOTDReceived) {
-                Log.d(TAG, "Board thread alive: " + boardThread.isAlive());
-                Log.d(TAG, "Version checked: " + versionChecked);
-                Log.d(TAG, "MOTD received: " + MOTDReceived);
+            if(boardThread.isAlive() || !versionChecked || !MOTDReceived || !banCheckComplete) {
                 boardLoadHandler.postDelayed(this, 500);
             }
 
@@ -224,7 +222,19 @@ public class MenuActivity extends AppCompatActivity {
         super.onResume();
 
         Log.d(TAG, "Main menu on resume");
+
+        if (userRestricted) {
+            startButton.setClickable(false);
+            return;
+        }
+
+        if (!VersionManager.getVersion().equals(VersionManager.getLatestVersion()) && VersionManager.getLatestVersion().endsWith("r")) {
+            startButton.setClickable(false);
+            return;
+        }
+
         startButton.setClickable(true);
+
         UserStatsManager.saveStats(getApplicationContext());
 
         // Create a new board when entering main menu
@@ -429,6 +439,7 @@ public class MenuActivity extends AppCompatActivity {
 
     private void checkUserRestricted() {
         mFireStore.collection("wg_banlist").get().addOnCompleteListener(task -> {
+            banCheckComplete = true;
             if (!task.isSuccessful()) {
                 Log.d(TAG, "Could not read blacklist data");
                 return;
@@ -473,7 +484,11 @@ public class MenuActivity extends AppCompatActivity {
         versionChecked = true;
     }
 
-    public void onMOTDRetrieved(String id, String message) {
+    /**
+     * Called when message of the day is received
+     * @param id message id, empty if message retrieving failed
+     */
+    public void onMOTDRetrieved(String id) {
         if (id.isEmpty()) {
             MOTDReceived = true;
             return;

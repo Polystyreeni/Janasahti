@@ -29,13 +29,13 @@ public class MOTDManager {
                     String[] content = response.split("\\|");
                     if (content.length == 2) {
                         MOTDMessage = content[1];
-                        activity.onMOTDRetrieved(content[0], content[1]);
+                        activity.onMOTDRetrieved(content[0]);
                     }
                 }
             }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    activity.onMOTDRetrieved("", "");
+                    activity.onMOTDRetrieved("");
                     Log.d(TAG, "Message retrieving failed");
                 }
             });
@@ -44,7 +44,7 @@ public class MOTDManager {
         }
 
         catch (Exception ex) {
-            activity.onMOTDRetrieved("", "");
+            activity.onMOTDRetrieved("");
             Log.d(TAG, "Version file retrieving failed");
         }
     }
