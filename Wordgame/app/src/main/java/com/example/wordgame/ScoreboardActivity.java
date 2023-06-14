@@ -380,6 +380,7 @@ public class ScoreboardActivity extends AppCompatActivity {
                 .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        Log.d(TAG, "FIREBASE: Fetched high score data");
                         progressBar.setVisibility(View.GONE);
                         if(!task.isSuccessful()) {
                             Log.d(TAG, "Error retrieving high score data!");
