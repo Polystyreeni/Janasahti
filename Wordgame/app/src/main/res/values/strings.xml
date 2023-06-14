@@ -50,6 +50,11 @@
     <string name="support_select_type">Valitse viestin tyyppi alla olevasta listasta</string>
     <string name="support_write_area">Kirjoita tähän…</string>
     <string name="button_send">Lähetä</string>
+    <string name="support_email_via">Lähetä käyttäen:</string>
     <string name="player_banned_text">Tämä tili on estetty.\n\nEston syy: %1$s\nEsto luotu: %2$s</string>
     <string name="player_banned_not_available">Tämä ominaisuus ei ole käytössä estetylle tilille!</string>
+    <string name="load_status_board">Haetaan pelilautoja…</string>
+    <string name="load_status_version">Haetaan versiotietoja…</string>
+    <string name="load_status_message">Haetaan viestejä…</string>
+    <string name="load_status_ban">Tarkastetaan estolistaa…</string>
 </resources>

@@ -43,6 +43,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -61,6 +64,7 @@ public class MenuActivity extends AppCompatActivity {
     private Button startButton;
     private EditText userNameField;
     private ProgressBar boardLoadProgressBar;
+    private TextView boardLoadStatusText;
     private ConstraintLayout layout;
     private View mainMenuBackground;
     private Button settingsButton;
@@ -87,12 +91,14 @@ public class MenuActivity extends AppCompatActivity {
     Runnable boardLoadRunnable = new Runnable() {
         @Override
         public void run() {
-            if(boardThread.isAlive() || !versionChecked || !MOTDReceived || !banCheckComplete) {
+            if((boardThread != null && boardThread.isAlive()) || !versionChecked || !MOTDReceived || !banCheckComplete || currentPopup != null) {
+                setLoadStatusText();
                 boardLoadHandler.postDelayed(this, 500);
             }
 
             else {
                 boardLoadProgressBar.setVisibility(View.GONE);
+                boardLoadStatusText.setVisibility(View.GONE);
                 startGame();
                 boardLoadHandler.removeCallbacks(boardLoadRunnable);
             }
@@ -122,6 +128,8 @@ public class MenuActivity extends AppCompatActivity {
         userNameField = findViewById(R.id.usernameEditText);
         boardLoadProgressBar = findViewById(R.id.boardLoadProgressBar);
         boardLoadProgressBar.setVisibility(View.GONE);
+        boardLoadStatusText = findViewById(R.id.boardLoadStatusText);
+        boardLoadStatusText.setVisibility(View.GONE);
         layout = findViewById(R.id.menuLayout);
         mainMenuBackground = findViewById(R.id.mainMenuBackView);
         gameModeSpinner = findViewById(R.id.gameModeSpinner);
@@ -167,7 +175,18 @@ public class MenuActivity extends AppCompatActivity {
 
         startButton.setOnClickListener(view -> {
             if(boardThread != null && boardThread.isAlive()) {
-                Log.d(TAG, "Board thread alive, waiting...");
+                boardLoadProgressBar.setVisibility(View.VISIBLE);
+                boardLoadStatusText.setVisibility(View.VISIBLE);
+                boardLoadStatusText.setText(getString(R.string.load_status_board));
+                boardLoadHandler.postDelayed(boardLoadRunnable, 0);
+                startButton.setClickable(false);
+                if(!banCheckComplete)
+                    checkUserRestricted();
+                return;
+            }
+
+            if (!banCheckComplete) {
+                checkUserRestricted();
                 boardLoadProgressBar.setVisibility(View.VISIBLE);
                 boardLoadHandler.postDelayed(boardLoadRunnable, 0);
                 startButton.setClickable(false);
@@ -205,8 +224,8 @@ public class MenuActivity extends AppCompatActivity {
         layout.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
             // Do this with delay, because not working otherwise
             if(UserSettings.getDarkModeEnabled() > 0) {
-                settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
-                userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
+                settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC);
+                userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC);
             }
         });
     }
@@ -234,7 +253,6 @@ public class MenuActivity extends AppCompatActivity {
         }
 
         startButton.setClickable(true);
-
         UserStatsManager.saveStats(getApplicationContext());
 
         // Create a new board when entering main menu
@@ -246,6 +264,12 @@ public class MenuActivity extends AppCompatActivity {
                 boardThread.start();
             }
         }
+
+        // Force button color -> otherwise remains the default color when returning
+        if(UserSettings.getDarkModeEnabled() > 0) {
+            settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC);
+            userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC);
+        }
     }
 
     @Override
@@ -254,7 +278,6 @@ public class MenuActivity extends AppCompatActivity {
         // Check if user is signed in (non-null) and update UI accordingly.
         if(GameSettings.UseFirebase()) {
             firebaseUser = firebaseAuth.getCurrentUser();
-            checkUserRestricted();
         }
     }
 
@@ -297,26 +320,23 @@ public class MenuActivity extends AppCompatActivity {
             return;
         }
 
-        userName = userNameField.getText().toString();
-        if(userName.isEmpty() || userName.trim().length() <= 0) {
-            userName = "Nimetön";
+        if (userRestricted) {
+            Toast.makeText(MenuActivity.this, getString(R.string.player_banned_not_available),
+                    Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        // We're using the '/' character for passing data, don't allow user to have it in their username
-        if(userName.contains("/"))
-            userName = userName.replaceAll("/", " ");
-
-        // Name can't be too long, will cause issues with scaling
-        if(userName.length() > GameSettings.getUsernameMaxLength()) {
-            userName = userName.substring(0, GameSettings.getUsernameMaxLength());
-        }
+        cleanUserName();
 
         if(firebaseUser != null && GameSettings.UseFirebase()) {
             sessionReference = mFireStore.collection(userCollectionName);
             String document = firebaseUser.getUid();
+            DateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+            String lastLogin = formatter.format(Calendar.getInstance().getTime());
 
             Map<String, Object> docData = new HashMap<>();
             docData.put("userName", userName);
+            docData.put("lastLogin", lastLogin);
             sessionReference.document(document).set(docData)
                     .addOnSuccessListener(aVoid -> Log.d(TAG, "Userprofile successfully written!"))
                     .addOnFailureListener(e -> Log.w(TAG, "Error writing Userprofile", e));
@@ -331,6 +351,22 @@ public class MenuActivity extends AppCompatActivity {
         BoardManager.setShouldGenerateBoard(false);
         startActivity(intent);
         boardThread = null;
+    }
+
+    private void cleanUserName() {
+        userName = userNameField.getText().toString();
+        if(userName.isEmpty() || userName.trim().length() == 0) {
+            userName = "Nimetön";
+        }
+
+        // We're using the '/' character for passing data, don't allow user to have it in their username
+        if(userName.contains("/"))
+            userName = userName.replaceAll("/", " ");
+
+        // Name can't be too long, will cause issues with scaling
+        if(userName.length() > GameSettings.getUsernameMaxLength()) {
+            userName = userName.substring(0, GameSettings.getUsernameMaxLength());
+        }
     }
 
     // Creates a local file containing the username
@@ -433,15 +469,18 @@ public class MenuActivity extends AppCompatActivity {
                         Log.w(TAG, "signInAnonymously:failure", task.getException());
                         Toast.makeText(MenuActivity.this, "Authentication failed.",
                                 Toast.LENGTH_SHORT).show();
+                        GameSettings.SetUseFirebase(false);
                     }
                 });
     }
 
     private void checkUserRestricted() {
+        Log.d(TAG, "Checking player ban list");
+
         mFireStore.collection("wg_banlist").get().addOnCompleteListener(task -> {
             banCheckComplete = true;
             if (!task.isSuccessful()) {
-                Log.d(TAG, "Could not read blacklist data");
+                Log.d(TAG, "Could not read ban list data");
                 return;
             }
 
@@ -468,9 +507,9 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     public void onVersionRetrieved(String latestVersion) {
+        versionChecked = true;
         if(latestVersion.isEmpty()) {
             Toast.makeText(MenuActivity.this, R.string.error_version, Toast.LENGTH_SHORT).show();
-            versionChecked = true;
             return;
         }
 
@@ -480,8 +519,6 @@ public class MenuActivity extends AppCompatActivity {
             // Create popup with update prompt
             showUpdatePopup(latestVersion);
         }
-
-        versionChecked = true;
     }
 
     /**
@@ -732,5 +769,21 @@ public class MenuActivity extends AppCompatActivity {
             if(UserSettings.getDarkModeEnabled() > 0)
                 userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
         });
+    }
+
+    private void setLoadStatusText() {
+        int resId = -1;
+        if (boardThread != null && boardThread.isAlive())
+            resId = R.string.load_status_board;
+        else if (!versionChecked)
+            resId = R.string.load_status_version;
+        else if (!MOTDReceived)
+            resId = R.string.load_status_message;
+        else if (!banCheckComplete)
+            resId = R.string.load_status_ban;
+
+        if (resId > 0) {
+            boardLoadStatusText.setText(getString(resId));
+        }
     }
 }

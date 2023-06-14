@@ -82,6 +82,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/startGameButton" />
 
+    <TextView
+        android:id="@+id/boardLoadStatusText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/boardLoadProgressBar"
+        android:text="@string/load_status_board"
+        android:textColor="@color/white"
+        android:shadowColor="@color/black"
+        android:shadowRadius="2"
+        android:textSize="12sp"/>
+
     <Button
         android:id="@+id/settingsButton"
         android:background="@drawable/wordgame_settings"
