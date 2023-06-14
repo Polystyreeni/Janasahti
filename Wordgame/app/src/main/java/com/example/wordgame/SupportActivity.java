@@ -46,6 +46,8 @@ public class SupportActivity extends AppCompatActivity {
     private CollectionReference sessionReference;
     private FirebaseAuth firebaseAuth;
 
+    private boolean emailDataWritten = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -114,20 +116,19 @@ public class SupportActivity extends AppCompatActivity {
         intent.putExtra(Intent.EXTRA_SUBJECT, subject);
         intent.putExtra(Intent.EXTRA_TEXT, content);
 
-        if (intent.resolveActivity(getPackageManager()) != null) {
-
-            // Write data to Firebase, this way we'll know who sends emails
+        // Write data to Firebase, this way we'll know who sends emails
+        if (!emailDataWritten) {
             EmailSendData data = new EmailSendData();
             data.setUserId(firebaseAuth.getUid());
             data.setDate(Calendar.getInstance().getTime().toString());
             String documentId = data.getUserId();
 
             sessionReference.document(documentId).set(data)
-                    .addOnSuccessListener(aVoid -> Log.d(TAG, "Email sent data successfully written!"))
+                    .addOnSuccessListener(aVoid -> emailDataWritten = true)
                     .addOnFailureListener(e -> Log.w(TAG, "Error writing sent data", e));
-
-            startActivity(intent);
         }
+
+        startActivity(Intent.createChooser(intent, getResources().getString(R.string.support_email_via)));
     }
 
     private void setDarkMode() {
