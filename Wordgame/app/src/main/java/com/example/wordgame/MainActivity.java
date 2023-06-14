@@ -732,6 +732,8 @@ public class MainActivity extends AppCompatActivity {
 
         Button definitionButton = popupView.findViewById(R.id.definitionSearchButton);
         definitionButton.setOnClickListener(view -> {
+            if (definitionThread != null)
+                return;
             definitionThread = new Thread(() -> WordDefinitionService.getWordDefinition(word.toString()));
             definitionThread.start();
             createDefinitionPopup(word);
@@ -763,6 +765,7 @@ public class MainActivity extends AppCompatActivity {
         definitionExitButton.setOnClickListener(view -> {
             if (definitionThread.isAlive())
                 definitionThread.interrupt();
+            definitionThread = null;
             wordDefinitionPopup.dismiss();
             wordDefinitionPopup = null;
         });
@@ -834,10 +837,12 @@ public class MainActivity extends AppCompatActivity {
 
     // Get the user's previous high score on this game board
     private void getPreviousHighScore() {
-        if(!GameSettings.UseFirebase())
+        if(!GameSettings.UseFirebase() || previousHighScore > 0)
             return;
+
         sessionReference = mFireStore.collection(collectionPath);
         sessionReference.document(fireBaseUid).get().addOnSuccessListener(documentSnapshot -> {
+            Log.d(TAG, "FIREBASE: Fetched high score data");
             HighscoreData previousData = documentSnapshot.toObject(HighscoreData.class);
             if(previousData != null) {
                 previousHighScore = ScoreUtils.getHighScore(previousData);
@@ -859,6 +864,7 @@ public class MainActivity extends AppCompatActivity {
         HighscoreData data = new HighscoreData(username, score, findBestWord(), wordsFound.size());
         data.setUserId(fireBaseUid);
         sessionReference.document(fireBaseUid).set(data);
+        Log.d(TAG, "FIREBASE: Wrote high score data");
     }
 
     /**
