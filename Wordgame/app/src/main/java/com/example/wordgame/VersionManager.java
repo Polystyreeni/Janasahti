@@ -11,7 +11,7 @@ import com.android.volley.toolbox.Volley;
 
 public class VersionManager {
     private static final String TAG = "VersionManager";
-    private static final String version = "1.5.0";
+    private static final String version = "1.5.1";
 
     // Will be overridden once version file is fetched
     private static String latestVersion = "1.5.0";
