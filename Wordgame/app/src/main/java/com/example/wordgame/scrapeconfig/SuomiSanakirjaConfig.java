@@ -9,7 +9,7 @@ import org.jsoup.select.Elements;
 
 public class SuomiSanakirjaConfig implements IScrapeConfig {
 
-    private String name = "Suomisanakirja";
+    private String name = "suomisanakirja.fi";
     private String baseUrl = "https://www.suomisanakirja.fi/{word}";
 
     @Override
@@ -43,7 +43,7 @@ public class SuomiSanakirjaConfig implements IScrapeConfig {
                 }
             }
 
-            stringBuilder.append(System.lineSeparator());
+            stringBuilder.append("<br><br>");
             stringBuilder.append(String.format("Määritelmän tarjosi: %s", name));
             return stringBuilder.toString();
         }
