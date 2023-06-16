@@ -67,8 +67,8 @@ public class MenuActivity extends AppCompatActivity {
     private TextView boardLoadStatusText;
     private ConstraintLayout layout;
     private View mainMenuBackground;
-    private Button settingsButton;
-    private Button userStatsButton;
+    private View settingsButton;
+    private View userStatsButton;
     private Spinner gameModeSpinner;
     private TextView gameModeDescription;
 
@@ -221,13 +221,6 @@ public class MenuActivity extends AppCompatActivity {
             UserStatsManager.saveStats(getApplicationContext());
 
         signInAnonymously();
-        layout.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            // Do this with delay, because not working otherwise
-            if(UserSettings.getDarkModeEnabled() > 0) {
-                settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC);
-                userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC);
-            }
-        });
     }
 
     @Override
@@ -305,8 +298,8 @@ public class MenuActivity extends AppCompatActivity {
             layout.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.background_gradient));
             mainMenuBackground.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.rounded_corner_gold));
             userNameField.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.black));
-            settingsButton.getBackground().mutate().setColorFilter(R.attr.colorPrimary, PorterDuff.Mode.MULTIPLY);
-            userStatsButton.getBackground().mutate().setColorFilter(R.attr.colorPrimary, PorterDuff.Mode.MULTIPLY);
+            settingsButton.getBackground().mutate().setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.pico_void), PorterDuff.Mode.MULTIPLY);
+            userStatsButton.getBackground().mutate().setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.pico_void), PorterDuff.Mode.MULTIPLY);
             gameModeDescription.setTextColor(Color.BLACK);
         }
     }
@@ -516,6 +509,10 @@ public class MenuActivity extends AppCompatActivity {
         VersionManager.setLatestVersion(latestVersion);
         String currentVersion = VersionManager.getVersion();
         if(!currentVersion.equals(latestVersion)) {
+            // Clear all popups, when version is fetched
+            if (currentPopup != null)
+                currentPopup.dismiss();
+
             // Create popup with update prompt
             showUpdatePopup(latestVersion);
         }
