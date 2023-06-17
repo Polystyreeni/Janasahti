@@ -260,8 +260,8 @@ public class MenuActivity extends AppCompatActivity {
 
         // Force button color -> otherwise remains the default color when returning
         if(UserSettings.getDarkModeEnabled() > 0) {
-            settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC);
-            userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC);
+            settingsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
+            userStatsButton.getBackground().mutate().setColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY);
         }
     }
 
