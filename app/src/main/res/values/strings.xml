@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Janasahti</string>
+
+    <!-- General buttons -->
+    <string name="general_confirm">Okei</string>
+    <string name="general_return">Palaa</string>
+    <string name="general_cancel">Peru</string>
+    <string name="general_exit">Lopeta</string>
+
+    <!-- Main menu -->
+    <string name="new_version_header">Päivitys saatavilla</string>
+    <string name="username_hint">Käyttäjänimi…</string>
+    <string name="start_game">Aloita</string>
+    <string name="motd_header">Ilmoitusasiaa</string>
+    <string name="gamemode_header">Pelimuoto</string>
+    <string name="player_banned_header">Tili estetty :(</string>
+    <string name="player_banned_text">Tämä tili on estetty.\n\nEston syy: %1$s\nEsto luotu: %2$s</string>
+    <string name="player_banned_not_available">Tämä ominaisuus ei ole käytössä estetylle tilille!</string>
+
+    <!-- Main activity -->
+    <string name="wordlist_word_len">%1$d kirjainta</string>
+    <string name="gameboard_timer">%1$d:%2$02d</string>
+    <string name="gameboard_current_score">%1$d / %2$d</string>
+    <string name="gameboard_found_word"><![CDATA[<b>%1$d</b> %2$s]]></string>
+    <string name="definition_search_button">Hae määritelmä</string>
+    <string name="timer_scoreboard">Pistetilastoihin: %1$d</string>
+
+    <!-- Scoreboard activity -->
+    <string name="best_players_header">Parhaat pelaajat</string>
+    <string name="scoreboard_info"><![CDATA[
+    <b>%1$s</b><br><b>%2$d</b> pistettä, %3$.2f %4$s<br>Pisin löydetty sana: <i>%5$s</i>
+    ]]></string>
+    <string name="scoreboard_info_rational"><![CDATA[
+    <b>%1$s</b><br><b>%2$d</b> sanaa, %3$.2f %4$s<br>Pisin löydetty sana: <i>%5$s</i>
+    ]]></string>
+    <string name="scoreboard_info_time"><![CDATA[
+    <b>%1$s</b><br><b>%2$d</b> pistettä (%3$s), %4$.2f %5$s<br>Pisin löydetty sana: <i>%6$s</i>
+    ]]></string>
+    <string name="timer_next_round">Seuraava kierros: %1$d</string>
+    <string name="scoreboard_round_max_score">Maksimipisteet: %1$d</string>
+    <string name="scoreboard_disabled">Pistetilastot eivät ole käytössä</string>
+
+    <!-- About activity -->
+    <string name="about_button">Lisätietoja</string>
+    <string name="about_activity_header">Tietoa sovelluksesta</string>
+    <string name="version_category_header">Versiotiedot</string>
+    <string name="support_category_header">Yhteystiedot</string>
+    <string name="software_category_header">Ohjelmistotiedot</string>
+    <string name="about_property_version">Sovelluksen versio:</string>
+    <string name="about_property_last_fetched">Viimeksi tarkastettu:</string>
+    <string name="about_property_src_code">Lähdekoodi:</string>
+    <string name="third_party_header">Lisenssitiedot</string>
+    <string name="version_mismatch">Asennettu: %1$s | Viimeisin: %2$s</string>
+    <string name="export_log_button">Vie lokitiedosto</string>
+    <string name="export_log_status_text">Lokitiedosto viety kohteeseen %1$s</string>
+
+    <!-- Status texts -->
+    <string name="load_status_board">Haetaan pelilautoja…</string>
+    <string name="load_status_version">Haetaan versiotietoja…</string>
+    <string name="load_status_message">Haetaan viestejä…</string>
+    <string name="load_status_ban">Tarkastetaan estolistaa…</string>
+    <string name="new_version_block_action">Peli on päivitettävä!</string>
+
+    <!-- Update handling -->
+    <string name="new_version_info">Sovelluksen käytettävyys on läpikäynyt kehitystä.\n\nUuden version voi ladata alla olevasta linkistä (etsi oikea versio ja lataa .apk-päätteinen tiedosto):</string>
+    <string name="new_version_number">Nykyinen versio: %1$s\nUusi versio: %2$s</string>
+    <string name="new_version_link">https://github.com/Polystyreeni/Janasahti/releases</string>
+    <string name="new_version_required"><![CDATA[Tämä päivitys on <b>PAKOLLINEN</b>]]></string>
+
+    <!-- Settings -->
+    <string name="settings_header">Asetukset</string>
+    <string name="settings_amoled">Näyttösuoja</string>
+    <string name="settings_color_mode">Tumma Teema</string>
+    <string name="settings_text_size">Kirjainkoko</string>
+    <string name="settings_scoreboard">Käytä pistetilastoja</string>
+    <string name="settings_offline_mode">Offline-tila</string>
+    <string name="settings_export_logs">Tallenna viim. loki</string>
+    <string name="settings_board_size">Pelilaudan koko</string>
+
+    <!-- Game modes -->
+    <string name="gamemode_select_header">Valitse pelimuodot </string>
+    <string name="gamemode_name_normal">Normaali</string>
+    <string name="gamemode_name_rational">Rationaalinen</string>
+    <string name="gamemode_name_time_chase">Aikajahti</string>
+    <string name="gamemode_name_extended">Laaja (5x5)</string>
+    <string name="gamemode_name_random">Satunnainen</string>
+    <string name="gamemode_description_normal">4x4 ruudukko, josta löydettävä 3–10 kirjaimisia sanoja. Pidemmät sanat tuottavat enemmän pisteitä.</string>
+    <string name="gamemode_description_rational">Kaikki sanat ovat samanarvoisia. Eniten sanoja löytänyt voittaa.</string>
+    <string name="gamemode_description_time_chase">Peli alkaa lyhennetyllä ajalla. Löydetyt sanat tuovat lisää aikaa.</string>
+    <string name="gamemode_description_extended">5x5 ruudukko, josta löydettävä 3–16 kirjaimisia sanoja. Pidemmät sanat tuottavat enemmän pisteitä.</string>
+    <string name="gamemode_description_random">Useampi valittu pelimuoto: pelimuoto valitaan satunnaisesti.</string>
+
+    <!-- Stats: headers -->
+    <string name="stats_common_header">Yleinen:</string>
+    <string name="stats_normal_header">Normaali:</string>
+    <string name="stats_rational_header">Rationaalinen:</string>
+    <string name="stats_time_chase_header">Aikajahti:</string>
+    <string name="stats_extended_header">Laaja(5x5):</string>
+
+    <!-- Stats: descriptions-->
+    <string name="stats_common_game_time">Peliaika yhteensä:</string>
+    <string name="stats_common_longest_word">Pisin sana:</string>
+    <string name="stats_common_games_played">Pelattuja pelejä:</string>
+    <string name="stats_common_first_places">&#128081;-lukumäärä:</string>
+    <string name="stats_common_avg_score">Keskiarvo per peli:</string>
+    <string name="stats_common_highest_percentage">Paras löytöprosentti:</string>
+    <string name="stats_common_score_total">Pisteitä yhteensä:</string>
+    <string name="stats_common_highest_score">Paras pistemäärä:</string>
+    <string name="stats_common_percentage_value">%1$s %2$s</string>
+    <string name="stats_rational_score_total">Löydettyjä sanoja yhteensä:</string>
+    <string name="stats_rational_highest_score">Eniten löydettyjä sanoja:</string>
+    <string name="stats_time_chase_highest_playtime">Pisin peli:</string>
+
+    <!-- Word definition fetcher -->
+    <string name="word_definition_reference">Lähde: %1$s</string>
+    <string name="word_definition_not_found">Määritelmää sanalle ei löytynyt.</string>
+
+    <!-- Scoreboard texts -->
+    <string name="unknown_user_name">Nimetön</string>
+    <string name="scoreboard_text_normal"><![CDATA[
+        <b>%1$d</b>: %2$s - %3$d pistettä &nbsp&nbsp<i>%4$s</i> &nbsp %5$.2f %6$s]]></string>
+    <string name="scoreboard_text_rational"><![CDATA[
+        <b>%1$d</b>: %2$s - %3$d sanaa &nbsp&nbsp<i>%4$s</i> &nbsp %5$.2f %6$s]]></string>
+    <string name="scoreboard_text_time_chase"><![CDATA[
+        <b>%1$d</b>: %2$s - %3$s (%4$d pistettä) &nbsp&nbsp<i>%5$s</i> &nbsp %6$.2f %7$s]]></string>
+
+    <!-- Offline mode popup -->
+    <string name="network_error_popup_header">Ei yhteyttä :(</string>
+    <string name="network_error_popup_content">Pelipalveluun ei saada yhteyttä. Tarkasta nettiyhteys.
+        Jos vika on palvelimen puolella, yritä myöhemmin uudestaan.
+        Halutessasi voit myös pelata offline-tilassa.</string>
+    <string name="network_error_popup_error_message">Virheen tiedot:</string>
+    <string name="network_error_popup_offline_button">Offline-tila</string>
+
+    <!-- Unrecoverable error popup -->
+    <string name="unrecoverable_error_popup_header">Offline-tila ei käytössä</string>
+    <string name="unrecoverable_error_popup_content">Paikallisia pelilautatiedostoja ei voida lukea.
+        Peliä ei voida käynnistää :(</string>
+
+    <!-- Info messages -->
+    <string name="scoreboard_manager_instance_changed">Sovellushallitsijan alustus - pistetilastoja
+        ei voida näyttää.</string>
+    <string name="info_offline_mode_active">Peli on offline-tilassa</string>
+    <string name="info_online_mode_active">Peli on online-tilassa</string>
+
+    <!-- Error messages -->
+    <string name="error_general">Virhe: %1$s</string>
+    <string name="error_version">Versiotiedon haku epäonnistui</string>
+    <string name="error_scoreboard">Pistetilastojen haku epäonnistui</string>
+    <string name="error_message_service">Viestipalveluun ei saatu yhteyttä</string>
+    <string name="error_network_change_connection">Yhteysvirhe, yritetään vaihtaa varayhteyteen</string>
+    <string name="error_backup_connection_failed">Varayhteyden vaihto epäonnistui</string>
+    <string name="error_authentication_failed">Autentikointi epäonnistui</string>
+    <string name="error_word_fetch_failed">Määritelmän haku epäonnistui: %1$s</string>
+    <string name="error_prev_log_file_not_found">Lokitiedostoa ei löytynyt</string>
+    <string name="error_exporting_log_file">Lokitiedoston vienti epäonnistui: %1$s</string>
+
+    <!-- Debug -->
+    <string name="debug_features_header">Debug-toiminnallisuus</string>
+    <string name="debug_clear_cache_description">Pakottaa tiedostojen haun uudelleen seuraavalla käynnistyskerralla</string>
+    <string name="debug_clear_cache_button">Tyhjennä välimuisti</string>
+    <string name="debug_cache_cleared_info">Välimuisti tyhjennetty</string>
+</resources>

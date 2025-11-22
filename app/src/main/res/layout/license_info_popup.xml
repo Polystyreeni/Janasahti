@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:minWidth="300dp"
+    android:background="@color/white">
+
+    <TextView
+        android:id="@+id/licensePopupHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_gravity="center"
+        android:layout_marginBottom="10dp"
+        android:textColor="@color/black"
+        android:textAlignment="center"
+        android:text="@string/third_party_header"
+        android:textSize="22sp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_marginHorizontal="4dp"
+        android:layout_height="280dp">
+
+        <com.mukesh.MarkdownView
+            android:id="@+id/licenseInfoView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounder_corner">
+        </com.mukesh.MarkdownView>
+    </ScrollView>
+
+    <Button
+        android:id="@+id/licensePopupReturnButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="6dp"
+        android:layout_gravity="center"
+        android:text="@string/general_return"/>
+
+</LinearLayout>
