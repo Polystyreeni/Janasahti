@@ -6,7 +6,7 @@ If you wish to contribute or develop your own fork of this application, here are
 - A physical Android device with Android 6.0 (API level 23) or newer
   - An emulator may work, but it will require some setup to get Firebase working. This has not been tested!
 - A [Firebase](https://firebase.google.com/) user account
-- An online service to host game files (for example Google Drive, Github Gist, etc.)
+- An online service to host game files. Any service that supports downloading static files over HTTP(s) works (for example Google Drive, Github Gist, etc.).
 
 ## Getting started
 1. Clone the repository using Git or download the source code directly.
@@ -14,46 +14,46 @@ If you wish to contribute or develop your own fork of this application, here are
 
 ## Configuring the app
 Application properties are provided as key-value pairs. Set your application properties in `/app/src/main/assets/app_config.properties`:
-- appVersion (MANDATORY)
+- `appVersion` (MANDATORY)
   - Version of the application. This version is compared to remote configuration files and will trigger the update prompt if versions are not matching.
   - **Format**: X.Y.Z(.B), beta version is optional. Versions are handled so that Z number maintains version compatibility. If X or Y changes, version update is mandatory in order to use the application.
-- configurationUrls (MANDATORY)
+- `configurationUrls` (MANDATORY)
   - Comma separated list of web URLs where to fetch app configuration from
   - NOTE: Make sure to separate URLs with comma and space (", ") so the parser can distinguish between URL-included commas and list separators!
-- localFileCacheExpirationTimeMs (MANDATORY)
+- `localFileCacheExpirationTimeMs` (MANDATORY)
   - Max time to use a cached remote configuration in the app. After expiration, remote configuration is fetched again from web URL.
   - **Format**: Long value
-- supportEmail (OPTIONAL)
+- `supportEmail` (OPTIONAL)
   - Support email. This is used in the application About page
   - **Format**: Email address (for example: `john.doe@email.com`)
-- supportGitHub (OPTIONAL)
+- `supportGitHub` (OPTIONAL)
   - Support Github user. This is used in the application About page.
   - **Format**: User name string (NOTE: User name only, GitHub prefix is added automatically)
-- gameSourceLink (OPTIONAL)
+- `gameSourceLink` (OPTIONAL)
   - Link where users can download the application (used in version update popups)
   - **Format**: Web URL
 
 ## Remote app configuration
 The following properties are recognized in remote configuration
-- latestVersion
+- `latestVersion`
   - Version of the configuration file (or the latest app version)
   - This version will trigger an update prompt if it differs from the app version
   - **Format**: X.Y.Z(.B)
-- boardListUrl
+- `boardListUrl`
   - List of URLs where to fetch board files from. See board file format here.
   - **Format**: Web URL
-- boardsCompressed
+- `boardsCompressed`
   - If true, board files a zip compressed. If false, board files are assumed to be plain XML text. See board file format below.
   - **Format**: (true/false)
-- boardsPerLoad
+- `boardsPerLoad`
   - Number of boards to load in memory from one file read.
   - **Format**: Integer number
-- useFirebase
+- `useFirebase`
   - Whether to use Firebase leaderboards in the application
   - **Format**: true/false
-- scoreBoardMaxPlayers
+- `scoreBoardMaxPlayers`
   - UNUSED
-- messageUrl
+- `messageUrl`
   - Url where to fetch message notifications. See message file format below.
   - **Format**: Web URL
 
