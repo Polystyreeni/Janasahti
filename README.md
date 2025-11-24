@@ -20,7 +20,7 @@ Oma versio mobiilipelistä Wordz-Sanajahti.
 - Internet-yhteys (vähintään ensimmäisellä käynnistyskerralla käyttäprofiilin luontia varten)
 
 ### Kehittäjäohjeet
-- Kehittäjäohjeet on kuvattu <Täällä>
+- Kehittäjäohjeet on kuvattu [täällä](docs/DEVELOPERS.md).
 
 ## EN
 > [!NOTE]
@@ -45,4 +45,4 @@ My own version of the mobile game Wordz-Sanajahti.
 - Internet connection (for first start to register a user account)
 
 ### Developer & contributor instructions
-- See developer instructions <Here>
+- See developer instructions [here](docs/DEVELOPERS.md).
