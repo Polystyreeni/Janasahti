@@ -125,7 +125,7 @@ Below is an example of an XML containing one board:
 ```
 Compressed board files are simply these xml-files zip-compressed. For example in Windows, these files can be created by using `Send to > Compressed/Zipped folder`.
 
-A Java application for generating board files exists and can be downloaded HERE TODO LINK.
+A Java application for generating board files exists and can be downloaded [here](https://github.com/Polystyreeni/BoardGenerator).
 
 
 ## Daily message format
